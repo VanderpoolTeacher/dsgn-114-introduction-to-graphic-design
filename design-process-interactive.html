@@ -611,16 +611,6 @@
             <p style={{ color: c.textSec, maxWidth: 540, margin: "0 auto", fontSize: "12pt" }}>Explore the five phases of design thinking — Empathize, Define, Ideate, Prototype, and Test — plus the iterative loop that ties them together.</p>
           </div>
 
-          {/* Phase ribbon */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 4, padding: "0 16px 8px", flexWrap: "wrap" }}>
-            {TOPICS.slice(0, 5).map((t, i) => (
-              <div key={t.id} onClick={() => { setSection("learn"); setActiveTopic(i); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 999, background: activeTopic === i && section === "learn" ? tc(t) : `${tc(t)}18`, color: activeTopic === i && section === "learn" ? "#fff" : tc(t), fontWeight: 700, fontSize: "12pt", cursor: "pointer", transition: "all 0.2s" }}>
-                <FA icon={t.icon} />{t.title}
-                {i < 4 && <span style={{ marginLeft: 4, opacity: 0.4 }}>→</span>}
-              </div>
-            ))}
-          </div>
-
           {/* Section nav */}
           <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "16px 16px 24px", flexWrap: "wrap" }}>
             {SECTIONS.map(s => (
