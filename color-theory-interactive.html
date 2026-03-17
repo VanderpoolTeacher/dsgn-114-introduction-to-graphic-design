@@ -198,7 +198,7 @@
                   />
                 );
               })}
-              <circle cx={cx} cy={cy} r={innerR = 20} fill={c.surface} />
+              <circle cx={cx} cy={cy} r={r - 20} fill={c.surface} />
             </svg>
             <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 180 }}>
               {wheelColors.filter(col => highlight === "all" || highlight === col.type).map(col => (
