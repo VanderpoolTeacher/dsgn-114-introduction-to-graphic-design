@@ -324,7 +324,11 @@
 
     function AppContent() {
       const c = useColors();
-      const { dark } = useTheme();
+      const { dark, bw } = useTheme();
+      /* When B&W mode is on, use a single neutral accent so all principles
+         convert to the same gray tone under the grayscale filter. */
+      const bwAccent = dark ? "#a0a0a0" : "#555555";
+      const pc = (p) => bw ? bwAccent : p.color;
       const [section, setSection] = useState("learn");
       const [activePrinciple, setActivePrinciple] = useState(0);
       const [quizState, setQuizState] = useState({ current: 0, answers: [], showResult: false });
@@ -367,6 +371,7 @@
       return (
         <div style={{ minHeight: "100vh", background: c.bg }}>
           <ThemeToggle />
+          <a href="index.html" style={{ position: "fixed", top: 16, left: 16, zIndex: 100, width: 44, height: 44, borderRadius: "50%", border: "none", background: c.surface, color: c.text, boxShadow: c.cardShadow, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16pt", textDecoration: "none", transition: "background 0.3s, color 0.3s" }} title="Back to Home"><FA icon="house" /></a>
           <div style={{ textAlign: "center", paddingTop: 48, paddingBottom: 24, paddingLeft: 16, paddingRight: 16 }}>
             <h1 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 800, color: c.text, letterSpacing: -0.5 }}>Design Principles Interactive</h1>
             <p style={{ color: c.textSec, marginTop: 8, fontSize: "12pt", maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>Learn the six core principles, then test your knowledge with quizzes, matching, and challenges.</p>
@@ -386,7 +391,7 @@
                 {PRINCIPLES.map((p, i) => {
                   const active = activePrinciple === i;
                   return (
-                    <button key={p.id} onClick={() => setActivePrinciple(i)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 12, border: "none", cursor: "pointer", transition: "all 0.2s", textAlign: "left", background: active ? p.color : c.surface, color: active ? "#fff" : p.color, boxShadow: active ? `0 4px 14px ${p.color}44` : c.cardShadow, transform: active ? "scale(1.02)" : "scale(1)" }}>
+                    <button key={p.id} onClick={() => setActivePrinciple(i)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 12, border: "none", cursor: "pointer", transition: "all 0.2s", textAlign: "left", background: active ? pc(p) : c.surface, color: active ? "#fff" : pc(p), boxShadow: active ? `0 4px 14px ${pc(p)}44` : c.cardShadow, transform: active ? "scale(1.02)" : "scale(1)" }}>
                       <span style={{ fontSize: "16pt", width: 28, textAlign: "center", flexShrink: 0 }}><FA icon={p.icon} /></span>
                       <span style={{ fontSize: "12pt", fontWeight: 600, lineHeight: 1.3 }}>{p.title}</span>
                     </button>
@@ -399,17 +404,17 @@
               {/* Content */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={card}>
-                  <div style={{ padding: 4, background: PRINCIPLES[activePrinciple].color }} />
+                  <div style={{ padding: 4, background: pc(PRINCIPLES[activePrinciple]) }} />
                   <div style={{ padding: 24 }}>
                     <h2 style={{ fontSize: "16pt", fontWeight: 700, color: c.text, display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: "20pt", color: PRINCIPLES[activePrinciple].color }}><FA icon={PRINCIPLES[activePrinciple].icon} /></span>
+                      <span style={{ fontSize: "20pt", color: pc(PRINCIPLES[activePrinciple]) }}><FA icon={PRINCIPLES[activePrinciple].icon} /></span>
                       {PRINCIPLES[activePrinciple].title}
                     </h2>
                     <p style={{ color: c.textSec, marginTop: 8, fontSize: "12pt" }}>{PRINCIPLES[activePrinciple].summary}</p>
                     <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
                       {PRINCIPLES[activePrinciple].tips.map((tip, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: "12pt", color: c.textSec }}>
-                          <span style={{ marginTop: 2, width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "10pt", fontWeight: 700, flexShrink: 0, background: PRINCIPLES[activePrinciple].color }}>{i + 1}</span>
+                          <span style={{ marginTop: 2, width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "10pt", fontWeight: 700, flexShrink: 0, background: pc(PRINCIPLES[activePrinciple]) }}>{i + 1}</span>
                           {tip}
                         </div>
                       ))}
@@ -507,7 +512,7 @@
                   if (ans && ok) { bg = c.greenBg; bdr = "#22c55e"; }
                   else if (ans && sel && !ok) { bg = c.redBg; bdr = "#ef4444"; }
                   return <button key={p.id} onClick={() => !ans && handleSpotAnswer(p.title)} style={{ ...optBtn(bg, bdr), fontWeight: 600, cursor: ans ? "default" : "pointer" }}>
-                    <FA icon={p.icon} style={{ marginRight: 6, color: p.color }} /> {p.title}
+                    <FA icon={p.icon} style={{ marginRight: 6, color: pc(p) }} /> {p.title}
                   </button>;
                 })}
               </div>
