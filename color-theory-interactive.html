@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Basic Color Theory</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-1: #f8fafc; --bg-2: #eef2ff; --bg-3: #faf5ff;
+      --surface: #ffffff; --surface-alt: #f9fafb;
+      --text-primary: #1f2937; --text-secondary: #6b7280; --text-muted: #9895ad;
+      --border: #e5e7eb;
+      --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+      --accent: #4f46e5;
+      --green-bg: #dcfce7; --green-text: #15803d;
+      --red-bg: #fef2f2; --red-text: #b91c1c;
+      --amber-bg: #fffbeb;
+      --indigo-light: #eef2ff; --green-light: #f0fdf4; --amber-light: #fffbeb;
+    }
+    [data-theme="dark"] {
+      --bg-1: #0f0d1a; --bg-2: #1a1833; --bg-3: #1e1a2e;
+      --surface: #1e1b2e; --surface-alt: #262340;
+      --text-primary: #e2e0f0; --text-secondary: #a5a3b8; --text-muted: #9895ad;
+      --border: #2d2a3e;
+      --card-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15);
+      --accent: #6366f1;
+      --green-bg: #052e16; --green-text: #86efac;
+      --red-bg: #350a0a; --red-text: #fca5a5;
+      --amber-bg: #271e05;
+      --indigo-light: #1e1b3a; --green-light: #0a1f0d; --amber-light: #1f1a08;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 12pt; line-height: 1.5;
+      color: var(--text-primary);
+      transition: background 0.3s, color 0.3s;
+    }
+    * { min-font-size: 12pt; }
+    p, span, div, button, a, li, td, th, label, input, select, textarea {
+      font-size: max(12pt, inherit); line-height: 1.5;
+    }
+    .allow-small { font-size: inherit !important; }
+    .toggle-bar { position: fixed; top: 16px; right: 16px; z-index: 100; display: flex; gap: 8px; }
+    .theme-toggle-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: none;
+      background: var(--surface); color: var(--text-primary);
+      box-shadow: var(--card-shadow); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16pt; transition: background 0.3s, color 0.3s;
+    }
+    .theme-toggle-btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .theme-toggle-btn.active-bw { background: #1f2937; color: #fff; }
+    [data-theme="dark"] .theme-toggle-btn.active-bw { background: #e2e0f0; color: #1e1b2e; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, createContext, useContext } = React;
+
+    const ThemeContext = createContext();
+    function useTheme() { return useContext(ThemeContext); }
+    function ThemeProvider({ children }) {
+      const [dark, setDark] = useState(false);
+      const [bw, setBw] = useState(false);
+      useEffect(() => { try { setDark(localStorage.getItem('theme') === 'dark'); } catch(e) {} try { setBw(localStorage.getItem('bw') === 'true'); } catch(e) {} }, []);
+      useEffect(() => { document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light'); try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch(e) {} }, [dark]);
+      useEffect(() => { document.documentElement.style.filter = bw ? 'grayscale(1)' : 'none'; try { localStorage.setItem('bw', bw ? 'true' : 'false'); } catch(e) {} }, [bw]);
+      return <ThemeContext.Provider value={{ dark, toggle: () => setDark(d => !d), bw, toggleBw: () => setBw(b => !b) }}>{children}</ThemeContext.Provider>;
+    }
+    function ThemeToggle() {
+      const { dark, toggle, bw, toggleBw } = useTheme();
+      return (
+        <div className="toggle-bar">
+          <button className={`theme-toggle-btn${bw ? ' active-bw' : ''}`} onClick={toggleBw} aria-label="Toggle black and white mode" title="Black & white mode"><i className="fa-solid fa-droplet-slash" /></button>
+          <button className="theme-toggle-btn" onClick={toggle} aria-label="Toggle dark mode" title="Dark mode"><i className={`fa-solid ${dark ? 'fa-sun' : 'fa-moon'}`} /></button>
+        </div>
+      );
+    }
+    function FA({ icon, className = "", style = {} }) { return <i className={`fa-solid fa-${icon} ${className}`} style={style} />; }
+
+    function useColors() {
+      const { dark, bw } = useTheme();
+      return {
+        bg: dark ? "linear-gradient(135deg, #0f0d1a 0%, #1a1833 50%, #1e1a2e 100%)" : "linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #faf5ff 100%)",
+        surface: dark ? "#1e1b2e" : "#ffffff",
+        surfaceAlt: dark ? "#262340" : "#f9fafb",
+        text: dark ? "#e2e0f0" : "#1f2937",
+        textSec: dark ? "#a5a3b8" : "#6b7280",
+        textMuted: dark ? "#9895ad" : "#9ca3af",
+        border: dark ? "#2d2a3e" : "#e5e7eb",
+        greenBg: dark ? "#052e16" : "#dcfce7",
+        greenText: dark ? "#86efac" : "#15803d",
+        redBg: dark ? "#350a0a" : "#fef2f2",
+        redText: dark ? "#fca5a5" : "#b91c1c",
+        amberBg: dark ? "#271e05" : "#fffbeb",
+        cardShadow: dark ? "0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15)" : "0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04)",
+      };
+    }
+
+    /* ─── Color Theory Topics ─── */
+    const TOPICS = [
+      { id: "wheel", title: "The Color Wheel", color: "#e11d48", icon: "palette",
+        summary: "The color wheel organizes colors by their relationships. Primary colors (red, yellow, blue) combine to create secondary colors (orange, green, violet), which mix further into tertiary colors.",
+        tips: ["Primary colors cannot be created by mixing other colors", "Secondary colors are made by mixing two primaries", "Tertiary colors sit between a primary and its neighboring secondary"]
+      },
+      { id: "properties", title: "Hue, Saturation & Value", color: "#f59e0b", icon: "sliders",
+        summary: "Every color has three properties: hue (the color family), saturation (intensity/purity), and value (lightness/darkness). Adjusting these creates tints, tones, and shades.",
+        tips: ["Hue is the name of the color — red, blue, green, etc.", "Saturation ranges from vivid (pure) to gray (desaturated)", "Value ranges from white (high) to black (low)"]
+      },
+      { id: "harmony", title: "Color Harmonies", color: "#10b981", icon: "circle-nodes",
+        summary: "Color harmonies are preset relationships on the color wheel that produce visually pleasing combinations. The main harmonies are complementary, analogous, triadic, and split-complementary.",
+        tips: ["Complementary colors sit opposite on the wheel — highest contrast", "Analogous colors sit next to each other — unified and calm", "Triadic colors form an equilateral triangle — vibrant and balanced"]
+      },
+      { id: "temperature", title: "Warm & Cool Colors", color: "#0ea5e9", icon: "temperature-half",
+        summary: "Colors are grouped into warm (reds, oranges, yellows) and cool (blues, greens, violets). Warm colors advance and feel energetic; cool colors recede and feel calm.",
+        tips: ["Warm colors grab attention and feel closer to the viewer", "Cool colors create depth and feel more distant", "Mixing warm and cool creates visual contrast and depth"]
+      },
+      { id: "psychology", title: "Color Psychology", color: "#8b5cf6", icon: "brain",
+        summary: "Colors evoke emotional and psychological responses. Red signals urgency or passion, blue conveys trust, green suggests nature and growth, and yellow communicates optimism.",
+        tips: ["Cultural context affects color meaning — red means luck in China, danger in the West", "Brands choose colors deliberately to evoke specific feelings", "Use color psychology intentionally to guide user emotion"]
+      },
+      { id: "contrast", title: "Color & Accessibility", color: "#6366f1", icon: "universal-access",
+        summary: "Good color use ensures content is readable and accessible. WCAG requires a minimum contrast ratio of 4.5:1 for normal text and 3:1 for large text.",
+        tips: ["Never rely on color alone to convey information — use labels, icons, or patterns too", "Test your designs with color blindness simulators", "High contrast between text and background is essential for readability"]
+      },
+    ];
+
+    /* ─── HSL helper ─── */
+    function hsl(h, s, l) { return `hsl(${h}, ${s}%, ${l}%)`; }
+
+    /* ─── Color Wheel Demo ─── */
+    function ColorWheelDemo() {
+      const c = useColors();
+      const [highlight, setHighlight] = useState("all");
+      const { bw } = useTheme();
+      const bwAccent = "#777";
+
+      const wheelColors = [
+        { angle: 0,   label: "Red",           type: "primary",   hex: "#ef4444" },
+        { angle: 30,  label: "Red-Orange",    type: "tertiary",  hex: "#f97316" },
+        { angle: 60,  label: "Orange",        type: "secondary", hex: "#f59e0b" },
+        { angle: 90,  label: "Yellow-Orange", type: "tertiary",  hex: "#eab308" },
+        { angle: 120, label: "Yellow",        type: "primary",   hex: "#facc15" },
+        { angle: 150, label: "Yellow-Green",  type: "tertiary",  hex: "#84cc16" },
+        { angle: 180, label: "Green",         type: "secondary", hex: "#22c55e" },
+        { angle: 210, label: "Blue-Green",    type: "tertiary",  hex: "#14b8a6" },
+        { angle: 240, label: "Blue",          type: "primary",   hex: "#3b82f6" },
+        { angle: 270, label: "Blue-Violet",   type: "tertiary",  hex: "#8b5cf6" },
+        { angle: 300, label: "Violet",        type: "secondary", hex: "#a855f7" },
+        { angle: 330, label: "Red-Violet",    type: "tertiary",  hex: "#ec4899" },
+      ];
+
+      const filters = [
+        { id: "all", label: "All" },
+        { id: "primary", label: "Primary" },
+        { id: "secondary", label: "Secondary" },
+        { id: "tertiary", label: "Tertiary" },
+      ];
+
+      const r = 90, cx = 130, cy = 130;
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+            {filters.map(f => (
+              <button key={f.id} onClick={() => setHighlight(f.id)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: highlight === f.id ? "#e11d48" : c.border, color: highlight === f.id ? "#fff" : c.textSec, transition: "all 0.3s" }}>{f.label}</button>
+            ))}
+          </div>
+          <div style={{ background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24, display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center", justifyContent: "center" }}>
+            <svg width="260" height="260" viewBox="0 0 260 260">
+              {wheelColors.map((col, i) => {
+                const a1 = (col.angle - 15) * Math.PI / 180;
+                const a2 = (col.angle + 15) * Math.PI / 180;
+                const active = highlight === "all" || highlight === col.type;
+                const outerR = r + 36;
+                const innerR = r - 20;
+                const x1o = cx + outerR * Math.cos(a1);
+                const y1o = cy + outerR * Math.sin(a1);
+                const x2o = cx + outerR * Math.cos(a2);
+                const y2o = cy + outerR * Math.sin(a2);
+                const x1i = cx + innerR * Math.cos(a2);
+                const y1i = cy + innerR * Math.sin(a2);
+                const x2i = cx + innerR * Math.cos(a1);
+                const y2i = cy + innerR * Math.sin(a1);
+                return (
+                  <path key={i}
+                    d={`M ${x1o} ${y1o} A ${outerR} ${outerR} 0 0 1 ${x2o} ${y2o} L ${x1i} ${y1i} A ${innerR} ${innerR} 0 0 0 ${x2i} ${y2i} Z`}
+                    fill={bw ? bwAccent : col.hex}
+                    opacity={active ? 1 : 0.15}
+                    stroke={c.surface} strokeWidth="2"
+                    style={{ transition: "opacity 0.3s", cursor: "pointer" }}
+                  />
+                );
+              })}
+              <circle cx={cx} cy={cy} r={innerR = 20} fill={c.surface} />
+            </svg>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 180 }}>
+              {wheelColors.filter(col => highlight === "all" || highlight === col.type).map(col => (
+                <div key={col.angle} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "12pt" }}>
+                  <div style={{ width: 16, height: 16, borderRadius: 4, background: bw ? bwAccent : col.hex, flexShrink: 0 }} />
+                  <span style={{ color: c.text, fontWeight: 600 }}>{col.label}</span>
+                  <span className="allow-small" style={{ fontSize: "9pt", color: c.textMuted, textTransform: "capitalize" }}>({col.type})</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ─── HSV Properties Demo ─── */
+    function PropertiesDemo() {
+      const c = useColors();
+      const [hue, setHue] = useState(200);
+      const [sat, setSat] = useState(80);
+      const [val, setVal] = useState(55);
+
+      const mainColor = hsl(hue, sat, val);
+      const tint = hsl(hue, sat * 0.6, 85);
+      const shade = hsl(hue, sat, val * 0.4);
+      const tone = hsl(hue, sat * 0.3, val);
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24 }}>
+            {/* Main swatch */}
+            <div style={{ height: 80, borderRadius: 10, background: mainColor, marginBottom: 20, transition: "background 0.3s", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span className="allow-small" style={{ fontSize: "10pt", fontWeight: 700, color: val > 60 ? "#000" : "#fff", opacity: 0.8 }}>H: {hue}  S: {sat}%  L: {val}%</span>
+            </div>
+            {/* Sliders */}
+            {[
+              { label: "Hue", value: hue, set: setHue, min: 0, max: 360, color: `linear-gradient(to right, hsl(0,80%,55%), hsl(60,80%,55%), hsl(120,80%,55%), hsl(180,80%,55%), hsl(240,80%,55%), hsl(300,80%,55%), hsl(360,80%,55%))` },
+              { label: "Saturation", value: sat, set: setSat, min: 0, max: 100, color: `linear-gradient(to right, hsl(${hue},0%,${val}%), hsl(${hue},100%,${val}%))` },
+              { label: "Lightness", value: val, set: setVal, min: 0, max: 100, color: `linear-gradient(to right, hsl(${hue},${sat}%,0%), hsl(${hue},${sat}%,50%), hsl(${hue},${sat}%,100%))` },
+            ].map(s => (
+              <div key={s.label} style={{ marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontWeight: 600, color: c.text, fontSize: "12pt" }}>{s.label}</span>
+                  <span style={{ color: c.textMuted, fontSize: "12pt" }}>{s.value}{s.label === "Hue" ? "°" : "%"}</span>
+                </div>
+                <input type="range" min={s.min} max={s.max} value={s.value} onChange={e => s.set(Number(e.target.value))} style={{ width: "100%", accentColor: mainColor }} />
+              </div>
+            ))}
+            {/* Tint / Tone / Shade */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 8 }}>
+              {[
+                { label: "Tint (+White)", bg: tint },
+                { label: "Tone (+Gray)", bg: tone },
+                { label: "Shade (+Black)", bg: shade },
+              ].map(t => (
+                <div key={t.label} style={{ textAlign: "center" }}>
+                  <div style={{ height: 44, borderRadius: 8, background: t.bg, transition: "background 0.3s", marginBottom: 4 }} />
+                  <span className="allow-small" style={{ fontSize: "9pt", color: c.textMuted, fontWeight: 600 }}>{t.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ─── Color Harmonies Demo ─── */
+    function HarmonyDemo() {
+      const c = useColors();
+      const [baseHue, setBaseHue] = useState(0);
+      const [harmony, setHarmony] = useState("complementary");
+
+      const harmonies = {
+        complementary:      { label: "Complementary",       hues: [baseHue, (baseHue + 180) % 360] },
+        analogous:          { label: "Analogous",           hues: [(baseHue - 30 + 360) % 360, baseHue, (baseHue + 30) % 360] },
+        triadic:            { label: "Triadic",             hues: [baseHue, (baseHue + 120) % 360, (baseHue + 240) % 360] },
+        splitComplementary: { label: "Split-Complementary", hues: [baseHue, (baseHue + 150) % 360, (baseHue + 210) % 360] },
+        tetradic:           { label: "Tetradic",            hues: [baseHue, (baseHue + 90) % 360, (baseHue + 180) % 360, (baseHue + 270) % 360] },
+      };
+
+      const current = harmonies[harmony];
+      const r = 80, cx = 100, cy = 100;
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+            {Object.entries(harmonies).map(([k, v]) => (
+              <button key={k} onClick={() => setHarmony(k)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: harmony === k ? "#10b981" : c.border, color: harmony === k ? "#fff" : c.textSec, transition: "all 0.3s" }}>{v.label}</button>
+            ))}
+          </div>
+          <div style={{ background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24, display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center", justifyContent: "center" }}>
+            <svg width="200" height="200" viewBox="0 0 200 200">
+              {/* Color wheel ring */}
+              {Array.from({ length: 36 }, (_, i) => {
+                const a1 = (i * 10 - 5) * Math.PI / 180;
+                const a2 = (i * 10 + 5) * Math.PI / 180;
+                const oR = 90, iR = 60;
+                return (
+                  <path key={i}
+                    d={`M ${cx + oR * Math.cos(a1)} ${cy + oR * Math.sin(a1)} A ${oR} ${oR} 0 0 1 ${cx + oR * Math.cos(a2)} ${cy + oR * Math.sin(a2)} L ${cx + iR * Math.cos(a2)} ${cy + iR * Math.sin(a2)} A ${iR} ${iR} 0 0 0 ${cx + iR * Math.cos(a1)} ${cy + iR * Math.sin(a1)} Z`}
+                    fill={hsl(i * 10, 70, 55)} opacity={0.4} />
+                );
+              })}
+              {/* Harmony points + lines */}
+              {current.hues.length > 1 && (
+                <polygon
+                  points={current.hues.map(h => { const a = (h - 90) * Math.PI / 180; return `${cx + 75 * Math.cos(a)},${cy + 75 * Math.sin(a)}`; }).join(' ')}
+                  fill="none" stroke={c.text} strokeWidth="2" strokeOpacity="0.3" />
+              )}
+              {current.hues.map((h, i) => {
+                const a = (h - 90) * Math.PI / 180;
+                const px = cx + 75 * Math.cos(a);
+                const py = cy + 75 * Math.sin(a);
+                return <circle key={i} cx={px} cy={py} r={10} fill={hsl(h, 70, 55)} stroke="#fff" strokeWidth="2" />;
+              })}
+            </svg>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ marginBottom: 4 }}>
+                <span style={{ fontWeight: 600, color: c.text, fontSize: "12pt" }}>Base hue: {baseHue}°</span>
+                <input type="range" min="0" max="360" value={baseHue} onChange={e => setBaseHue(Number(e.target.value))} style={{ width: "100%", accentColor: hsl(baseHue, 70, 55) }} />
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {current.hues.map((h, i) => (
+                  <div key={i} style={{ textAlign: "center" }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 8, background: hsl(h, 70, 55), transition: "background 0.3s" }} />
+                    <span className="allow-small" style={{ fontSize: "9pt", color: c.textMuted, fontWeight: 600 }}>{h}°</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ─── Warm & Cool Demo ─── */
+    function TemperatureDemo() {
+      const c = useColors();
+      const [mode, setMode] = useState("split");
+
+      const warm = ["#ef4444", "#f97316", "#f59e0b", "#eab308", "#facc15"];
+      const cool = ["#06b6d4", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7"];
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 6 }}>
+            {[
+              { id: "split", label: "Side by Side" },
+              { id: "warm", label: "Warm Only" },
+              { id: "cool", label: "Cool Only" },
+              { id: "mixed", label: "Mixed Palette" },
+            ].map(m => (
+              <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: mode === m.id ? "#0ea5e9" : c.border, color: mode === m.id ? "#fff" : c.textSec, transition: "all 0.3s" }}>{m.label}</button>
+            ))}
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24 }}>
+            {mode === "split" && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div>
+                  <div style={{ fontWeight: 700, color: "#ef4444", marginBottom: 8, fontSize: "12pt", textAlign: "center" }}><FA icon="fire" style={{ marginRight: 6 }} />Warm</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {warm.map((col, i) => <div key={i} style={{ height: 36, borderRadius: 6, background: col, transition: "all 0.3s" }} />)}
+                  </div>
+                  <p className="allow-small" style={{ fontSize: "10pt", color: c.textMuted, marginTop: 8, textAlign: "center" }}>Advance, energize, feel closer</p>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, color: "#3b82f6", marginBottom: 8, fontSize: "12pt", textAlign: "center" }}><FA icon="snowflake" style={{ marginRight: 6 }} />Cool</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {cool.map((col, i) => <div key={i} style={{ height: 36, borderRadius: 6, background: col, transition: "all 0.3s" }} />)}
+                  </div>
+                  <p className="allow-small" style={{ fontSize: "10pt", color: c.textMuted, marginTop: 8, textAlign: "center" }}>Recede, calm, feel distant</p>
+                </div>
+              </div>
+            )}
+            {mode === "warm" && (
+              <div>
+                <div style={{ display: "flex", gap: 8, height: 100, marginBottom: 12 }}>
+                  {warm.map((col, i) => <div key={i} style={{ flex: 1, borderRadius: 8, background: col }} />)}
+                </div>
+                <p style={{ color: c.textSec, fontSize: "12pt" }}>Warm colors — reds, oranges, and yellows — feel energetic, inviting, and draw the eye forward. Great for calls to action and key elements.</p>
+              </div>
+            )}
+            {mode === "cool" && (
+              <div>
+                <div style={{ display: "flex", gap: 8, height: 100, marginBottom: 12 }}>
+                  {cool.map((col, i) => <div key={i} style={{ flex: 1, borderRadius: 8, background: col }} />)}
+                </div>
+                <p style={{ color: c.textSec, fontSize: "12pt" }}>Cool colors — blues, greens, and violets — feel calming, trustworthy, and create a sense of depth. Ideal for backgrounds and supporting elements.</p>
+              </div>
+            )}
+            {mode === "mixed" && (
+              <div>
+                <div style={{ display: "flex", gap: 8, height: 100, marginBottom: 12 }}>
+                  {["#3b82f6", "#6366f1", "#ef4444", "#3b82f6", "#f59e0b"].map((col, i) => <div key={i} style={{ flex: 1, borderRadius: 8, background: col }} />)}
+                </div>
+                <p style={{ color: c.textSec, fontSize: "12pt" }}>Mixing warm and cool colors creates dynamic contrast. A cool-dominant palette with a warm accent (or vice versa) draws attention to key elements while keeping the design balanced.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    /* ─── Color Psychology Demo ─── */
+    function PsychologyDemo() {
+      const c = useColors();
+      const [selected, setSelected] = useState(0);
+
+      const colors = [
+        { name: "Red",    hex: "#ef4444", meanings: "Passion, urgency, energy, danger",     brands: "YouTube, Netflix, Coca-Cola",  feel: "Exciting and urgent — raises heart rate" },
+        { name: "Blue",   hex: "#3b82f6", meanings: "Trust, calm, stability, professionalism", brands: "Facebook, LinkedIn, PayPal",    feel: "Reliable and calming — most universally liked" },
+        { name: "Green",  hex: "#22c55e", meanings: "Nature, growth, health, money",         brands: "Starbucks, Spotify, Whole Foods", feel: "Fresh and balanced — easy on the eyes" },
+        { name: "Yellow", hex: "#eab308", meanings: "Optimism, warmth, caution, attention",  brands: "McDonald's, IKEA, Snapchat",    feel: "Cheerful and attention-grabbing" },
+        { name: "Purple", hex: "#8b5cf6", meanings: "Luxury, creativity, mystery, wisdom",   brands: "Twitch, Cadbury, Hallmark",     feel: "Sophisticated and imaginative" },
+        { name: "Orange", hex: "#f97316", meanings: "Fun, confidence, enthusiasm, affordable", brands: "Amazon, Fanta, Nickelodeon",    feel: "Friendly and energetic — less intense than red" },
+      ];
+
+      const sel = colors[selected];
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+            {colors.map((col, i) => (
+              <button key={i} onClick={() => setSelected(i)} style={{ padding: "5px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: selected === i ? col.hex : c.border, color: selected === i ? "#fff" : c.textSec, transition: "all 0.3s" }}>{col.name}</button>
+            ))}
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24 }}>
+            <div style={{ height: 64, borderRadius: 10, background: sel.hex, marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontWeight: 800, color: "#fff", fontSize: "18pt" }}>{sel.name}</span>
+            </div>
+            {[
+              { icon: "heart", label: "Associations", value: sel.meanings },
+              { icon: "building", label: "Brand examples", value: sel.brands },
+              { icon: "face-smile", label: "How it feels", value: sel.feel },
+            ].map(row => (
+              <div key={row.label} style={{ display: "flex", gap: 10, marginBottom: 10, fontSize: "12pt" }}>
+                <FA icon={row.icon} style={{ color: sel.hex, marginTop: 3, width: 16, flexShrink: 0 }} />
+                <div><span style={{ fontWeight: 600, color: c.text }}>{row.label}: </span><span style={{ color: c.textSec }}>{row.value}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    /* ─── Color & Accessibility Demo ─── */
+    function ContrastDemo() {
+      const c = useColors();
+      const [bgColor, setBgColor] = useState("#1e3a5f");
+      const [fgColor, setFgColor] = useState("#ffffff");
+
+      function luminance(hex) {
+        const rgb = [1, 3, 5].map(i => {
+          let c = parseInt(hex.slice(i, i + 2), 16) / 255;
+          return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+      }
+      function contrastRatio(c1, c2) {
+        const l1 = luminance(c1), l2 = luminance(c2);
+        const lighter = Math.max(l1, l2), darker = Math.min(l1, l2);
+        return ((lighter + 0.05) / (darker + 0.05));
+      }
+
+      const ratio = contrastRatio(bgColor, fgColor);
+      const passAA = ratio >= 4.5;
+      const passAALarge = ratio >= 3;
+
+      const presets = [
+        { bg: "#1e3a5f", fg: "#ffffff", label: "Dark Blue + White" },
+        { bg: "#f5f5f5", fg: "#333333", label: "Light Gray + Dark" },
+        { bg: "#ffeb3b", fg: "#ffffff", label: "Yellow + White (bad)" },
+        { bg: "#ffffff", fg: "#d4d4d4", label: "White + Light Gray (bad)" },
+      ];
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+            {presets.map((p, i) => (
+              <button key={i} onClick={() => { setBgColor(p.bg); setFgColor(p.fg); }} style={{ padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: c.border, color: c.textSec, transition: "all 0.3s" }}>{p.label}</button>
+            ))}
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24 }}>
+            {/* Preview */}
+            <div style={{ background: bgColor, borderRadius: 10, padding: 24, marginBottom: 16, textAlign: "center", transition: "background 0.3s" }}>
+              <div style={{ color: fgColor, fontSize: "20pt", fontWeight: 700, marginBottom: 4, transition: "color 0.3s" }}>Sample Text</div>
+              <div style={{ color: fgColor, fontSize: "12pt", opacity: 0.9, transition: "color 0.3s" }}>The quick brown fox jumps over the lazy dog</div>
+            </div>
+            {/* Color pickers */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              <div>
+                <span style={{ fontWeight: 600, color: c.text, fontSize: "12pt" }}>Background</span>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
+                  <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} style={{ width: 36, height: 36, border: "none", borderRadius: 6, cursor: "pointer" }} />
+                  <span style={{ color: c.textMuted, fontSize: "12pt", fontFamily: "monospace" }}>{bgColor}</span>
+                </div>
+              </div>
+              <div>
+                <span style={{ fontWeight: 600, color: c.text, fontSize: "12pt" }}>Text</span>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
+                  <input type="color" value={fgColor} onChange={e => setFgColor(e.target.value)} style={{ width: 36, height: 36, border: "none", borderRadius: 6, cursor: "pointer" }} />
+                  <span style={{ color: c.textMuted, fontSize: "12pt", fontFamily: "monospace" }}>{fgColor}</span>
+                </div>
+              </div>
+            </div>
+            {/* Ratio & WCAG result */}
+            <div style={{ textAlign: "center", padding: 14, borderRadius: 10, background: passAA ? c.greenBg : c.redBg }}>
+              <div style={{ fontSize: "20pt", fontWeight: 800, color: passAA ? c.greenText : c.redText }}>{ratio.toFixed(2)} : 1</div>
+              <div style={{ fontSize: "12pt", fontWeight: 600, color: passAA ? c.greenText : c.redText, marginTop: 4 }}>
+                {passAA ? <span><FA icon="check" style={{ marginRight: 4 }} />WCAG AA Normal Text</span> : <span><FA icon="xmark" style={{ marginRight: 4 }} />Fails WCAG AA Normal Text (need 4.5:1)</span>}
+              </div>
+              <div style={{ fontSize: "12pt", color: passAALarge ? c.greenText : c.redText, marginTop: 2 }}>
+                {passAALarge ? <span><FA icon="check" style={{ marginRight: 4 }} />Passes Large Text (3:1)</span> : <span><FA icon="xmark" style={{ marginRight: 4 }} />Fails Large Text too</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const DEMO_MAP = { wheel: ColorWheelDemo, properties: PropertiesDemo, harmony: HarmonyDemo, temperature: TemperatureDemo, psychology: PsychologyDemo, contrast: ContrastDemo };
+
+    /* ─── Quiz ─── */
+    const QUIZ_QUESTIONS = [
+      { question: "Which colors are the three primary colors?", options: ["Red, Green, Blue", "Red, Yellow, Blue", "Cyan, Magenta, Yellow", "Orange, Green, Purple"], correct: 1, explanation: "In traditional color theory (subtractive), the primary colors are red, yellow, and blue. They cannot be created by mixing other colors." },
+      { question: "What is a complementary color pair?", options: ["Colors next to each other on the wheel", "Colors opposite each other on the wheel", "Three evenly spaced colors", "Any two warm colors"], correct: 1, explanation: "Complementary colors sit directly opposite each other on the color wheel, creating the highest possible contrast between two hues." },
+      { question: "Adding white to a color creates a:", options: ["Shade", "Tone", "Tint", "Hue"], correct: 2, explanation: "A tint is made by adding white to a color, making it lighter. A shade adds black, and a tone adds gray." },
+      { question: "What is the minimum WCAG AA contrast ratio for normal body text?", options: ["2:1", "3:1", "4.5:1", "7:1"], correct: 2, explanation: "WCAG AA requires a contrast ratio of at least 4.5:1 for normal text. Large text (18pt+ or 14pt bold) needs only 3:1." },
+      { question: "An analogous color scheme uses colors that are:", options: ["Opposite on the wheel", "Next to each other on the wheel", "Evenly spaced around the wheel", "All the same hue"], correct: 1, explanation: "Analogous colors sit adjacent on the color wheel (e.g., blue, blue-green, green). They create harmonious, unified palettes." },
+      { question: "Which color is most associated with trust and professionalism?", options: ["Red", "Yellow", "Blue", "Green"], correct: 2, explanation: "Blue is the color most associated with trust, stability, and professionalism — which is why it dominates corporate branding (Facebook, LinkedIn, PayPal)." },
+      { question: "What property of color describes its lightness or darkness?", options: ["Hue", "Saturation", "Value", "Temperature"], correct: 2, explanation: "Value (also called lightness/brightness) describes how light or dark a color is, independent of its hue or saturation." },
+    ];
+
+    const MATCHING_PAIRS = [
+      { term: "Complementary", description: "Opposite colors on the wheel (e.g. red & green)" },
+      { term: "Analogous", description: "Neighboring colors on the wheel (e.g. blue, blue-green, green)" },
+      { term: "Saturation", description: "The intensity or purity of a color" },
+      { term: "Value", description: "How light or dark a color is" },
+      { term: "Triadic", description: "Three colors equally spaced around the wheel" },
+      { term: "Tint", description: "A color mixed with white" },
+    ];
+
+    const SPOT_PROBLEMS = [
+      { scenario: "A health app uses only red and green to distinguish 'healthy' from 'unhealthy' readings, with no text labels or icons.", options: ["This is fine — red and green are universally understood", "The icons should be bigger", "Color alone shouldn't convey meaning — add labels or patterns for colorblind users"], answer: 2, explanation: "About 8% of men have red-green color blindness. Always pair color with text, icons, or patterns to ensure accessibility." },
+      { scenario: "A designer uses a bright yellow headline on a white background to create a cheerful landing page.", options: ["Great use of warm, inviting color", "Yellow on white has very low contrast — the text may be unreadable", "Yellow should only be used for warnings"], answer: 1, explanation: "Yellow on white fails WCAG contrast requirements. Despite being cheerful, it's nearly invisible to many users. Use yellow as an accent on dark backgrounds instead." },
+      { scenario: "A presentation uses red, blue, orange, purple, green, yellow, pink, and teal — a different color for each section.", options: ["More colors means more visual interest", "Using too many unrelated colors creates visual chaos and no clear hierarchy", "Each section needs its own color identity"], answer: 1, explanation: "Using too many colors without a system creates visual noise. A strong palette typically uses 2-3 main colors plus neutrals, with additional colors used sparingly." },
+    ];
+
+    /* ─── Main App ─── */
+    function AppContent() {
+      const c = useColors();
+      const { bw } = useTheme();
+      const bwAccent = bw ? "#777" : null;
+      const tc = (topic) => bw ? bwAccent : topic.color;
+
+      const [section, setSection] = useState("learn");
+      const [activeTopic, setActiveTopic] = useState(0);
+      const [quizState, setQuizState] = useState({ current: 0, answers: [], showResult: false });
+      const [matchState, setMatchState] = useState(() => {
+        const indices = MATCHING_PAIRS.map((_, i) => i);
+        for (let i = indices.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [indices[i], indices[j]] = [indices[j], indices[i]]; }
+        return { selected: null, matched: [], shuffledRight: indices, attempts: {} };
+      });
+      const [spotState, setSpotState] = useState({ current: 0, selected: null, feedback: null });
+      const [score, setScore] = useState({ quiz: 0, match: 0, spot: 0 });
+
+      const totalPossible = QUIZ_QUESTIONS.length + MATCHING_PAIRS.length + SPOT_PROBLEMS.length;
+      const totalScore = score.quiz + score.match + score.spot;
+
+      function handleQuizAnswer(i) { if (quizState.answers[quizState.current] !== undefined) return; const ok = i === QUIZ_QUESTIONS[quizState.current].correct; const a = [...quizState.answers]; a[quizState.current] = i; setQuizState({ ...quizState, answers: a }); if (ok) setScore(s => ({ ...s, quiz: s.quiz + 1 })); }
+      function nextQuiz() { quizState.current < QUIZ_QUESTIONS.length - 1 ? setQuizState({ ...quizState, current: quizState.current + 1 }) : setQuizState({ ...quizState, showResult: true }); }
+
+      function handleMatch(side, i) { if (matchState.matched.includes(i) && side === "left") return; if (side === "left") { setMatchState(s => ({ ...s, selected: i })); } else { const ri = matchState.shuffledRight[i]; if (matchState.selected !== null) { if (ri === matchState.selected) { const isFirst = !matchState.attempts[matchState.selected]; setMatchState(s => ({ ...s, matched: [...s.matched, ri], selected: null })); if (isFirst) setScore(s => ({ ...s, match: s.match + 1 })); } else { setMatchState(s => ({ ...s, attempts: { ...s.attempts, [s.selected]: true }, selected: null })); } } } }
+
+      function handleSpotAnswer(a) { const ok = a === SPOT_PROBLEMS[spotState.current].answer; setSpotState({ ...spotState, selected: a, feedback: ok ? "correct" : "wrong" }); if (ok) setScore(s => ({ ...s, spot: s.spot + 1 })); }
+      function nextSpot() { spotState.current < SPOT_PROBLEMS.length - 1 ? setSpotState({ current: spotState.current + 1, selected: null, feedback: null }) : setSection("results"); }
+
+      const card = { background: c.surface, borderRadius: 12, boxShadow: c.cardShadow };
+      const actionBtn = { padding: "10px 24px", borderRadius: 8, fontSize: "12pt", fontWeight: 600, border: "none", cursor: "pointer", background: "#4f46e5", color: "#fff" };
+      const navBtn = (s) => ({ padding: "8px 18px", borderRadius: 999, fontSize: "12pt", fontWeight: 600, border: "none", cursor: "pointer", transition: "all 0.2s", background: section === s.id ? "#4f46e5" : c.surface, color: section === s.id ? "#fff" : c.textSec, boxShadow: section === s.id ? "0 4px 14px rgba(79,70,229,0.3)" : c.cardShadow });
+
+      const SECTIONS = [
+        { id: "learn", label: "Learn", icon: "book-open" },
+        { id: "quiz", label: "Quiz", icon: "circle-question" },
+        { id: "match", label: "Matching", icon: "puzzle-piece" },
+        { id: "spot", label: "Spot the Problem", icon: "magnifying-glass" },
+      ];
+
+      const Demo = DEMO_MAP[TOPICS[activeTopic].id];
+
+      return (
+        <div style={{ minHeight: "100vh", background: c.bg }}>
+          <ThemeToggle />
+          <a href="index.html" style={{ position: "fixed", top: 16, left: 16, zIndex: 100, width: 44, height: 44, borderRadius: "50%", border: "none", background: c.surface, color: c.text, boxShadow: c.cardShadow, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16pt", textDecoration: "none", transition: "background 0.3s, color 0.3s" }} title="Back to Home"><FA icon="house" /></a>
+
+          {/* Header */}
+          <div style={{ textAlign: "center", padding: "80px 16px 32px" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "#e11d48", color: "#fff", borderRadius: 999, padding: "6px 16px", fontWeight: 700, fontSize: "12pt", marginBottom: 16, letterSpacing: 1 }}>
+              <FA icon="palette" /> COLOR THEORY
+            </div>
+            <h1 style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)", fontWeight: 800, color: c.text, lineHeight: 1.2, margin: "0 0 8px" }}>Basic Color Theory</h1>
+            <p style={{ color: c.textSec, maxWidth: 520, margin: "0 auto", fontSize: "12pt" }}>Explore color relationships, harmonies, psychology, and accessibility through interactive demos and challenges.</p>
+          </div>
+
+          {/* Section nav */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "0 16px 24px", flexWrap: "wrap" }}>
+            {SECTIONS.map(s => (
+              <button key={s.id} onClick={() => setSection(s.id)} style={navBtn(s)}>
+                <FA icon={s.icon} style={{ marginRight: 6 }} />{s.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ maxWidth: section === "learn" ? 960 : 672, margin: "0 auto", padding: "0 16px 64px", transition: "max-width 0.3s" }}>
+
+            {/* ─── LEARN ─── */}
+            {section === "learn" && <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+              {/* Sidebar */}
+              <div style={{ width: 220, flexShrink: 0, position: "sticky", top: 80, display: "flex", flexDirection: "column", gap: 4 }}>
+                {TOPICS.map((t, i) => (
+                  <button key={t.id} onClick={() => setActiveTopic(i)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, border: "none", cursor: "pointer", background: activeTopic === i ? c.surface : "transparent", boxShadow: activeTopic === i ? c.cardShadow : "none", color: activeTopic === i ? c.text : c.textSec, fontWeight: activeTopic === i ? 700 : 500, fontSize: "12pt", textAlign: "left", transition: "all 0.2s" }}>
+                    <span style={{ width: 30, height: 30, borderRadius: 8, background: activeTopic === i ? tc(t) : "transparent", color: activeTopic === i ? "#fff" : c.textMuted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12pt", flexShrink: 0, transition: "all 0.2s" }}>
+                      <FA icon={t.icon} />
+                    </span>
+                    {t.title}
+                  </button>
+                ))}
+              </div>
+
+              {/* Main content */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ ...card, padding: 28, marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: tc(TOPICS[activeTopic]), color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16pt" }}>
+                      <FA icon={TOPICS[activeTopic].icon} />
+                    </div>
+                    <h2 style={{ fontSize: "18pt", fontWeight: 800, color: c.text, margin: 0 }}>{TOPICS[activeTopic].title}</h2>
+                  </div>
+                  <p style={{ color: c.textSec, marginBottom: 16, fontSize: "12pt" }}>{TOPICS[activeTopic].summary}</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {TOPICS[activeTopic].tips.map((tip, i) => (
+                      <div key={i} style={{ display: "flex", gap: 8, fontSize: "12pt" }}>
+                        <FA icon="circle-check" style={{ color: tc(TOPICS[activeTopic]), marginTop: 3, flexShrink: 0 }} />
+                        <span style={{ color: c.text }}>{tip}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ ...card, padding: 28 }}>
+                  <div className="allow-small" style={{ fontSize: "9pt", fontWeight: 700, color: tc(TOPICS[activeTopic]), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 }}>Interactive Demo</div>
+                  <Demo />
+                </div>
+              </div>
+            </div>}
+
+            {/* ─── QUIZ ─── */}
+            {section === "quiz" && <div style={{ ...card, padding: 24 }}>
+              {!quizState.showResult ? <>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                  <span style={{ fontWeight: 700, color: c.text, fontSize: "12pt" }}>Question</span>
+                  <span style={{ fontSize: "12pt", color: c.textMuted }}>{quizState.current + 1} / {QUIZ_QUESTIONS.length}</span>
+                </div>
+                <div style={{ height: 6, background: c.border, borderRadius: 4, marginBottom: 20, overflow: "hidden" }}>
+                  <div style={{ height: 6, background: "#6366f1", borderRadius: 4, transition: "width 0.5s", width: `${((quizState.current + 1) / QUIZ_QUESTIONS.length) * 100}%` }} />
+                </div>
+                <p style={{ color: c.text, fontWeight: 600, marginBottom: 16, fontSize: "12pt" }}>{QUIZ_QUESTIONS[quizState.current].question}</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {QUIZ_QUESTIONS[quizState.current].options.map((opt, i) => {
+                    const answered = quizState.answers[quizState.current] !== undefined;
+                    const ok = i === QUIZ_QUESTIONS[quizState.current].correct;
+                    const chosen = quizState.answers[quizState.current] === i;
+                    return <button key={i} onClick={() => handleQuizAnswer(i)} style={{ padding: "12px 16px", borderRadius: 8, border: `2px solid ${answered ? (ok ? c.greenText : chosen ? c.redText : c.border) : c.border}`, background: answered ? (ok ? c.greenBg : chosen ? c.redBg : c.surface) : c.surface, color: c.text, fontSize: "12pt", fontWeight: chosen || ok ? 600 : 400, cursor: answered ? "default" : "pointer", textAlign: "left", transition: "all 0.2s" }}>{opt}</button>;
+                  })}
+                </div>
+                {quizState.answers[quizState.current] !== undefined && <>
+                  <div style={{ fontSize: "12pt", padding: 14, borderRadius: 8, marginTop: 12, background: quizState.answers[quizState.current] === QUIZ_QUESTIONS[quizState.current].correct ? c.greenBg : c.redBg, color: quizState.answers[quizState.current] === QUIZ_QUESTIONS[quizState.current].correct ? c.greenText : c.redText }}>{QUIZ_QUESTIONS[quizState.current].explanation}</div>
+                  <button onClick={nextQuiz} style={{ ...actionBtn, marginTop: 12 }}>{quizState.current < QUIZ_QUESTIONS.length - 1 ? <span>Next Question <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span> : <span>See Results <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span>}</button>
+                </>}
+              </> : <div style={{ textAlign: "center", padding: "32px 0" }}>
+                <div style={{ fontSize: "20pt", fontWeight: 700, color: c.text }}>{score.quiz} / {QUIZ_QUESTIONS.length}</div>
+                <p style={{ color: c.textSec, fontSize: "12pt" }}>Quiz complete!</p>
+                <button onClick={() => setSection("match")} style={{ ...actionBtn, marginTop: 16 }}>Continue to Matching <FA icon="arrow-right" style={{ marginLeft: 4 }} /></button>
+              </div>}
+            </div>}
+
+            {/* ─── MATCHING ─── */}
+            {section === "match" && <div style={{ ...card, padding: 24 }}>
+              <h3 style={{ fontWeight: 700, color: c.text, fontSize: "14pt", marginBottom: 16 }}><FA icon="puzzle-piece" style={{ marginRight: 8, color: "#8b5cf6" }} />Match the Term to its Definition</h3>
+              {matchState.matched.length === MATCHING_PAIRS.length ? <div style={{ textAlign: "center", padding: "32px 0" }}>
+                <div style={{ fontSize: "20pt", fontWeight: 700, color: c.text }}><FA icon="circle-check" style={{ color: c.greenText, marginRight: 8 }} />All Matched!</div>
+                <p style={{ color: c.textSec, marginTop: 8, fontSize: "12pt" }}>You matched {score.match} of {MATCHING_PAIRS.length} on your first try.</p>
+                <button onClick={() => setSection("spot")} style={{ ...actionBtn, marginTop: 16 }}>Continue to Spot the Problem <FA icon="arrow-right" style={{ marginLeft: 4 }} /></button>
+              </div> : <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {MATCHING_PAIRS.map((pair, i) => {
+                    const matched = matchState.matched.includes(i);
+                    return <button key={i} onClick={() => handleMatch("left", i)} disabled={matched} style={{ padding: "10px 14px", borderRadius: 8, border: `2px solid ${matched ? c.greenText : matchState.selected === i ? "#8b5cf6" : c.border}`, background: matched ? c.greenBg : matchState.selected === i ? "#8b5cf610" : c.surface, color: matched ? c.greenText : c.text, fontSize: "12pt", fontWeight: 600, cursor: matched ? "default" : "pointer", opacity: matched ? 0.6 : 1, textAlign: "left", transition: "all 0.2s" }}>{pair.term}</button>;
+                  })}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {matchState.shuffledRight.map((pi, i) => {
+                    const matched = matchState.matched.includes(pi);
+                    return <button key={i} onClick={() => handleMatch("right", i)} disabled={matched} style={{ padding: "10px 14px", borderRadius: 8, border: `2px solid ${matched ? c.greenText : c.border}`, background: matched ? c.greenBg : c.surface, color: matched ? c.greenText : c.textSec, fontSize: "12pt", cursor: matched ? "default" : "pointer", opacity: matched ? 0.6 : 1, textAlign: "left", transition: "all 0.2s" }}>
+                      {MATCHING_PAIRS[pi].description}
+                    </button>;
+                  })}
+                </div>
+              </div>}
+            </div>}
+
+            {/* ─── SPOT THE PROBLEM ─── */}
+            {section === "spot" && <div style={{ ...card, padding: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+                <span style={{ fontWeight: 700, color: c.text, fontSize: "14pt" }}><FA icon="magnifying-glass" style={{ marginRight: 8, color: "#f59e0b" }} />Spot the Problem</span>
+                <span style={{ fontSize: "12pt", color: c.textMuted }}>{spotState.current + 1} / {SPOT_PROBLEMS.length}</span>
+              </div>
+              <p style={{ color: c.text, fontWeight: 600, fontSize: "12pt" }}><FA icon="quote-left" style={{ color: "#f59e0b", marginRight: 8, opacity: 0.5 }} />{SPOT_PROBLEMS[spotState.current].scenario}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
+                {SPOT_PROBLEMS[spotState.current].options.map((opt, i) => {
+                  const answered = spotState.selected !== null;
+                  const ok = i === SPOT_PROBLEMS[spotState.current].answer;
+                  const chosen = spotState.selected === i;
+                  return <button key={i} onClick={() => !answered && handleSpotAnswer(i)} style={{ padding: "12px 16px", borderRadius: 8, border: `2px solid ${answered ? (ok ? c.greenText : chosen ? c.redText : c.border) : c.border}`, background: answered ? (ok ? c.greenBg : chosen ? c.redBg : c.surface) : c.surface, color: c.text, fontSize: "12pt", fontWeight: chosen || ok ? 600 : 400, cursor: answered ? "default" : "pointer", textAlign: "left", transition: "all 0.2s" }}>{opt}</button>;
+                })}
+              </div>
+              {spotState.feedback && <>
+                <div style={{ fontSize: "12pt", padding: 14, borderRadius: 8, marginTop: 12, background: spotState.feedback === "correct" ? c.greenBg : c.redBg, color: spotState.feedback === "correct" ? c.greenText : c.redText }}>{SPOT_PROBLEMS[spotState.current].explanation}</div>
+                <button onClick={nextSpot} style={{ ...actionBtn, marginTop: 12 }}>{spotState.current < SPOT_PROBLEMS.length - 1 ? <span>Next Problem <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span> : <span>See Final Results <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span>}</button>
+              </>}
+            </div>}
+
+            {/* ─── RESULTS ─── */}
+            {section === "results" && <div style={{ ...card, padding: 32, textAlign: "center" }}>
+              <FA icon="trophy" style={{ fontSize: "36pt", color: "#f59e0b", marginBottom: 16 }} />
+              <div style={{ fontSize: "24pt", fontWeight: 800, color: c.text }}>{totalScore} / {totalPossible}</div>
+              <p style={{ color: c.textSec, fontSize: "12pt", marginTop: 8 }}>Total score across all activities</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginTop: 24, maxWidth: 400, margin: "24px auto 0" }}>
+                {[
+                  { label: "Quiz", score: score.quiz, total: QUIZ_QUESTIONS.length, icon: "circle-question", color: "#6366f1" },
+                  { label: "Matching", score: score.match, total: MATCHING_PAIRS.length, icon: "puzzle-piece", color: "#8b5cf6" },
+                  { label: "Spot", score: score.spot, total: SPOT_PROBLEMS.length, icon: "magnifying-glass", color: "#f59e0b" },
+                ].map(s => (
+                  <div key={s.label} style={{ background: c.surfaceAlt, borderRadius: 10, padding: 16 }}>
+                    <FA icon={s.icon} style={{ color: s.color, fontSize: "16pt", marginBottom: 8 }} />
+                    <div style={{ fontSize: "16pt", fontWeight: 700, color: c.text }}>{s.score}/{s.total}</div>
+                    <div style={{ fontSize: "12pt", color: c.textMuted }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => window.location.reload()} style={{ ...actionBtn, marginTop: 24 }}><FA icon="arrow-rotate-right" style={{ marginRight: 6 }} />Try Again</button>
+            </div>}
+          </div>
+        </div>
+      );
+    }
+
+    function App() { return <ThemeProvider><AppContent /></ThemeProvider>; }
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
