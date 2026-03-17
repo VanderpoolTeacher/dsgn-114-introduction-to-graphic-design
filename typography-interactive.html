@@ -172,102 +172,17 @@
     }
 
     function AnatomyDemo() {
+      const { dark } = useTheme();
       const c = useColors();
       const accent = "#0ea5e9";
       const [word, setWord] = useState("Typography");
-      const [metrics, setMetrics] = useState(null);
-      const [fontReady, setFontReady] = useState(false);
-      /* Refs for hidden measurement characters rendered in the SVG */
-      const refAsc = React.useRef(null);
-      const refCap = React.useRef(null);
-      const refX = React.useRef(null);
-      const refDesc = React.useRef(null);
 
-      const svgW = 520, padL = 8, padR = 8, baseline = 100, fontSize = 64;
-      const fontAttr = { fontFamily: "'Playfair Display', serif", fontSize, fontWeight: "700" };
-
-      /* Explicitly load the Google Font, then flag ready */
-      React.useEffect(() => {
-        let cancelled = false;
-        const load = async () => {
-          try {
-            await document.fonts.load("700 64px 'Playfair Display'");
-          } catch(e) { /* ignore */ }
-          /* Also wait a frame so SVG text elements reflow with the real font */
-          await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-          if (!cancelled) setFontReady(true);
-        };
-        load();
-        return () => { cancelled = true; };
-      }, []);
-
-      /* Measure once font is ready, and re-measure when word changes */
-      React.useEffect(() => {
-        if (!fontReady) return;
-        /* Double-rAF ensures SVG text has reflowed with updated word */
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          const get = (ref) => {
-            if (!ref.current) return null;
-            try { return ref.current.getBBox(); } catch(e) { return null; }
-          };
-          const bAsc = get(refAsc);
-          const bCap = get(refCap);
-          const bX   = get(refX);
-          const bDesc = get(refDesc);
-          if (!bAsc || !bCap || !bX || !bDesc) return;
-          setMetrics({
-            ascLine:  bAsc.y,
-            capLine:  bCap.y,
-            xLine:    bX.y,
-            baseline: baseline,
-            descLine: bDesc.y + bDesc.height,
-          });
-        }));
-      }, [fontReady, word]);
-
-      const guides = [
-        { key: "ascLine",  color: "#ef4444", label: "Ascender line", dash: "6,4" },
-        { key: "capLine",  color: "#f59e0b", label: "Cap height",    dash: "6,4" },
-        { key: "xLine",    color: "#10b981", label: "X-height",      dash: "6,4" },
-        { key: "baseline", color: "#6366f1", label: "Baseline",      dash: "" },
-        { key: "descLine", color: "#8b5cf6", label: "Descender line",dash: "6,4" },
-      ];
-
-      const svgH = metrics ? metrics.descLine + 28 : 140;
-      const textX = svgW / 2;
+      const imgSrc = `images/anatomy-${word.toLowerCase()}${dark ? "-dark" : ""}.png`;
 
       return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-          <div style={{ width: "100%", maxWidth: svgW + 48, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24 }}>
-            <svg viewBox={`0 0 ${svgW} ${svgH}`} width="100%" style={{ display: "block" }}>
-              {/* Hidden reference characters for measurement — same font/baseline */}
-              <text ref={refAsc}  x="-500" y={baseline} {...fontAttr} opacity="0">d</text>
-              <text ref={refCap}  x="-500" y={baseline} {...fontAttr} opacity="0">H</text>
-              <text ref={refX}    x="-500" y={baseline} {...fontAttr} opacity="0">x</text>
-              <text ref={refDesc} x="-500" y={baseline} {...fontAttr} opacity="0">p</text>
-
-              {/* Guide lines — only shown after measurement */}
-              {metrics && guides.map(gl => {
-                const y = metrics[gl.key];
-                return (
-                  <g key={gl.key}>
-                    <line x1={padL} y1={y} x2={svgW - padR} y2={y}
-                      stroke={gl.color} strokeWidth={gl.dash ? 1.5 : 2}
-                      strokeDasharray={gl.dash} strokeOpacity={0.6} />
-                    <text x={padL + 2} y={y - 4} fill={gl.color}
-                      fontSize="10" fontWeight="600" fontFamily="system-ui, sans-serif">
-                      {gl.label}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {/* The display word */}
-              <text x={textX} y={baseline} textAnchor="middle" {...fontAttr} fill={c.text}>
-                {word}
-              </text>
-            </svg>
-
+          <div style={{ width: "100%", maxWidth: 560, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24 }}>
+            <img src={imgSrc} alt={`Type anatomy diagram for "${word}" showing ascender, cap height, x-height, baseline, and descender lines`} style={{ width: "100%", height: "auto", display: "block" }} />
             {/* Legend */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}>
               {[
