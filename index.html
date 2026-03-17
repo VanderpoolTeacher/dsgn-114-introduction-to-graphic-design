@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSGN 114 – Introduction to Graphic Design</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #faf5ff 100%);
+      color: #1e1b4b;
+    }
+
+    /* ─── Header ─── */
+    .hero {
+      text-align: center;
+      padding: 80px 24px 48px;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: #6366f1;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+    .hero p {
+      font-size: 1.1rem;
+      color: #6b7280;
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ─── Cards grid ─── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px 64px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.08);
+    }
+    .card-bar {
+      height: 5px;
+    }
+    .card-body {
+      padding: 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .card p {
+      font-size: 0.9rem;
+      color: #6b7280;
+      line-height: 1.55;
+      flex: 1;
+    }
+    .card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 16px;
+      transition: gap 0.2s;
+    }
+    .card:hover .card-link { gap: 10px; }
+
+    /* ─── Footer ─── */
+    .footer {
+      text-align: center;
+      padding: 32px 24px 48px;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+    .footer a {
+      color: #6366f1;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <div class="hero">
+    <span class="hero-badge">DSGN 114</span>
+    <h1>Introduction to<br />Graphic Design</h1>
+    <p>An interactive course covering the foundational principles every designer needs to know — contrast, alignment, repetition, proximity, hierarchy, and white space.</p>
+  </div>
+
+  <!-- Cards -->
+  <div class="cards">
+
+    <!-- Interactive Lesson -->
+    <a href="design-principles-interactive.html" class="card">
+      <div class="card-bar" style="background: linear-gradient(90deg, #6366f1, #8b5cf6)"></div>
+      <div class="card-body">
+        <div class="card-icon" style="background: #6366f1">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <h2>Design Principles Interactive</h2>
+        <p>Explore each principle with live visual demos, then test yourself with a quiz, matching game, and spot-the-problem challenges.</p>
+        <span class="card-link" style="color: #6366f1">
+          Launch interactive <i class="fa-solid fa-arrow-right"></i>
+        </span>
+      </div>
+    </a>
+
+    <!-- GitHub Repo -->
+    <a href="https://github.com/VanderpoolTeacher/dsgn-114-introduction-to-graphic-design" target="_blank" rel="noopener noreferrer" class="card">
+      <div class="card-bar" style="background: linear-gradient(90deg, #1e1b4b, #4338ca)"></div>
+      <div class="card-body">
+        <div class="card-icon" style="background: #1e1b4b">
+          <i class="fa-brands fa-github"></i>
+        </div>
+        <h2>Course Repository</h2>
+        <p>Browse the full source code, lesson files, and project resources on GitHub. Fork it, contribute, or use it as a starting point for your own work.</p>
+        <span class="card-link" style="color: #1e1b4b">
+          View on GitHub <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </span>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    DSGN 114 &middot; Introduction to Graphic Design &middot;
+    <a href="https://github.com/VanderpoolTeacher/dsgn-114-introduction-to-graphic-design">
+      <i class="fa-brands fa-github"></i> VanderpoolTeacher
+    </a>
+  </div>
+
+</body>
+</html>

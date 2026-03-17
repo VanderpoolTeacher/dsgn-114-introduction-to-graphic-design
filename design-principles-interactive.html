@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design Principles Interactive</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+    function FA({ icon, className = "", style = {} }) {
+      return <i className={`fa-solid fa-${icon} ${className}`} style={style} />;
+    }
+
+    const PRINCIPLES = [
+      {
+        id: "contrast", title: "Contrast", color: "#6366f1", icon: "circle-half-stroke",
+        summary: "Make different things VERY different to create visual interest and hierarchy.",
+        tips: ["Pair bold headings with light body text", "Use dark text on light backgrounds (or vice versa)", "Vary element sizes dramatically"],
+      },
+      {
+        id: "alignment", title: "Alignment", color: "#0ea5e9", icon: "align-left",
+        summary: "Every element should have a visual connection to something else on the page.",
+        tips: ["Pick one alignment and stick with it", "Use a grid system for structure", "Align captions to their images"],
+      },
+      {
+        id: "repetition", title: "Repetition", color: "#10b981", icon: "clone",
+        summary: "Repeat visual elements — colors, fonts, shapes — to create unity and consistency.",
+        tips: ["Limit yourself to 2–3 fonts", "Reuse accent colors for related elements", "Keep spacing consistent between sections"],
+      },
+      {
+        id: "proximity", title: "Proximity", color: "#f59e0b", icon: "object-group",
+        summary: "Group related items together. Physical closeness signals relationship.",
+        tips: ["Place captions directly beneath their images", "Cluster contact details together", "Add more space between unrelated groups"],
+      },
+      {
+        id: "hierarchy", title: "Hierarchy", color: "#ef4444", icon: "layer-group",
+        summary: "Control the order the eye processes information. Most important = most prominent.",
+        tips: ["Make the primary message largest and boldest", "Create at least 3 levels of emphasis", "Place key info where the eye starts (top-left)"],
+      },
+      {
+        id: "whitespace", title: "White Space", color: "#8b5cf6", icon: "expand",
+        summary: "Empty space isn't wasted — it's a powerful design tool that creates elegance.",
+        tips: ["Add generous margins and padding", "Increase line spacing for readability", "Let important elements breathe"],
+      },
+    ];
+
+    /* ─── Visual Demo Components ─── */
+
+    function ContrastDemo() {
+      const [showGood, setShowGood] = useState(false);
+      return (
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex gap-2 mb-2">
+            <button onClick={() => setShowGood(false)} className={`px-3 py-1 rounded text-sm font-medium transition ${!showGood ? "bg-red-500 text-white" : "bg-gray-200 text-gray-600"}`}>Bad Example</button>
+            <button onClick={() => setShowGood(true)} className={`px-3 py-1 rounded text-sm font-medium transition ${showGood ? "bg-green-500 text-white" : "bg-gray-200 text-gray-600"}`}>Good Example</button>
+          </div>
+          <div className="w-full max-w-sm rounded-xl overflow-hidden shadow-lg transition-all duration-500" style={{ background: showGood ? "#1e1b4b" : "#d1d5db" }}>
+            <div className="p-6 text-center">
+              <h3 style={{ fontSize: showGood ? 32 : 16, fontWeight: showGood ? 800 : 400, color: showGood ? "#fff" : "#9ca3af", transition: "all 0.5s" }}>Summer Sale</h3>
+              <p style={{ fontSize: showGood ? 14 : 15, color: showGood ? "#a5b4fc" : "#9ca3af", marginTop: 8, transition: "all 0.5s" }}>50% off everything this weekend</p>
+              <div style={{ marginTop: 16, display: "inline-block", padding: "8px 24px", borderRadius: 8, background: showGood ? "#facc15" : "#c4c4c4", color: showGood ? "#1e1b4b" : "#a0a0a0", fontWeight: showGood ? 700 : 400, fontSize: showGood ? 16 : 14, transition: "all 0.5s" }}>Shop Now</div>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 italic text-center max-w-xs">{showGood ? "Strong contrast between heading, body, and button makes the hierarchy clear." : "Similar sizes, weights, and colors make everything blend together."}</p>
+        </div>
+      );
+    }
+
+    function AlignmentDemo() {
+      const [aligned, setAligned] = useState(false);
+      return (
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex gap-2 mb-2">
+            <button onClick={() => setAligned(false)} className={`px-3 py-1 rounded text-sm font-medium transition ${!aligned ? "bg-red-500 text-white" : "bg-gray-200 text-gray-600"}`}>Misaligned</button>
+            <button onClick={() => setAligned(true)} className={`px-3 py-1 rounded text-sm font-medium transition ${aligned ? "bg-green-500 text-white" : "bg-gray-200 text-gray-600"}`}>Aligned</button>
+          </div>
+          <div className="w-full max-w-sm bg-white rounded-xl shadow-lg p-6 transition-all duration-500">
+            <div style={{ textAlign: aligned ? "left" : "center", transition: "all 0.5s" }}><div className="text-lg font-bold text-gray-800">Sarah Johnson</div></div>
+            <div style={{ textAlign: aligned ? "left" : "right", transition: "all 0.5s" }}><div className="text-sm text-gray-500 mt-1">Creative Director</div></div>
+            <div className="border-t my-3" />
+            <div style={{ textAlign: aligned ? "left" : "center", transition: "all 0.5s" }}><div className="text-sm text-gray-600">sarah@studio.com</div></div>
+            <div style={{ textAlign: "left", marginLeft: aligned ? 0 : 30, transition: "all 0.5s" }}><div className="text-sm text-gray-600">(555) 123-4567</div></div>
+            <div style={{ textAlign: aligned ? "left" : "right", transition: "all 0.5s" }}><div className="text-sm text-gray-600">Portland, OR</div></div>
+          </div>
+          <p className="text-sm text-gray-500 italic text-center max-w-xs">{aligned ? "Consistent left alignment creates a clean, professional edge." : "Mixed alignments feel scattered and unprofessional."}</p>
+        </div>
+      );
+    }
+
+    function RepetitionDemo() {
+      const [consistent, setConsistent] = useState(false);
+      const randomStyle = (i) => {
+        const fonts = ["Georgia, serif", "Courier New, monospace", "Arial, sans-serif"];
+        const colors = ["#ef4444", "#3b82f6", "#10b981"];
+        const sizes = [13, 16, 11];
+        return { fontFamily: fonts[i], color: colors[i], fontSize: sizes[i] };
+      };
+      const items = ["Brand Identity", "Web Design", "Print Layout"];
+      return (
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex gap-2 mb-2">
+            <button onClick={() => setConsistent(false)} className={`px-3 py-1 rounded text-sm font-medium transition ${!consistent ? "bg-red-500 text-white" : "bg-gray-200 text-gray-600"}`}>Inconsistent</button>
+            <button onClick={() => setConsistent(true)} className={`px-3 py-1 rounded text-sm font-medium transition ${consistent ? "bg-green-500 text-white" : "bg-gray-200 text-gray-600"}`}>Consistent</button>
+          </div>
+          <div className="w-full max-w-sm bg-white rounded-xl shadow-lg p-6">
+            <div className="text-center font-bold text-gray-800 mb-4">Our Services</div>
+            <div className="flex flex-col gap-3">
+              {items.map((item, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg transition-all duration-500" style={{ background: consistent ? "#f0fdf4" : ["#fef2f2", "#eff6ff", "#f0fdf4"][i] }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold transition-all duration-500" style={{ background: consistent ? "#10b981" : ["#ef4444", "#3b82f6", "#10b981"][i] }}>{i + 1}</div>
+                  <span className="transition-all duration-500" style={consistent ? { fontFamily: "inherit", color: "#1f2937", fontSize: 14 } : randomStyle(i)}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 italic text-center max-w-xs">{consistent ? "Repeated colors, fonts, and styles make the elements feel like a unified system." : "Different fonts, colors, and styles for each item feel chaotic."}</p>
+        </div>
+      );
+    }
+
+    function ProximityDemo() {
+      const [grouped, setGrouped] = useState(false);
+      return (
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex gap-2 mb-2">
+            <button onClick={() => setGrouped(false)} className={`px-3 py-1 rounded text-sm font-medium transition ${!grouped ? "bg-red-500 text-white" : "bg-gray-200 text-gray-600"}`}>Scattered</button>
+            <button onClick={() => setGrouped(true)} className={`px-3 py-1 rounded text-sm font-medium transition ${grouped ? "bg-green-500 text-white" : "bg-gray-200 text-gray-600"}`}>Grouped</button>
+          </div>
+          <div className="w-full max-w-sm bg-white rounded-xl shadow-lg p-6 transition-all duration-500">
+            <div className="text-center font-bold text-gray-800 mb-3">Event Details</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: grouped ? 0 : 12, transition: "all 0.5s" }}>
+              <div className="text-sm font-semibold text-indigo-600" style={{ marginTop: grouped ? 12 : 0 }}>When</div>
+              <div className="text-sm text-gray-600" style={{ marginTop: grouped ? 2 : 0 }}>Saturday, April 12</div>
+              <div className="text-sm text-gray-600" style={{ marginTop: grouped ? 2 : 0 }}>2:00 PM – 5:00 PM</div>
+              <div className="text-sm font-semibold text-indigo-600" style={{ marginTop: grouped ? 16 : 0 }}>Where</div>
+              <div className="text-sm text-gray-600" style={{ marginTop: grouped ? 2 : 0 }}>Central Park Pavilion</div>
+              <div className="text-sm text-gray-600" style={{ marginTop: grouped ? 2 : 0 }}>123 Park Avenue</div>
+              <div className="text-sm font-semibold text-indigo-600" style={{ marginTop: grouped ? 16 : 0 }}>Contact</div>
+              <div className="text-sm text-gray-600" style={{ marginTop: grouped ? 2 : 0 }}>events@studio.com</div>
+              <div className="text-sm text-gray-600" style={{ marginTop: grouped ? 2 : 0 }}>(555) 987-6543</div>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 italic text-center max-w-xs">{grouped ? "Tight grouping with space between groups makes relationships obvious." : "Even spacing everywhere makes it hard to see which items belong together."}</p>
+        </div>
+      );
+    }
+
+    function HierarchyDemo() {
+      const [hasHierarchy, setHasHierarchy] = useState(false);
+      return (
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex gap-2 mb-2">
+            <button onClick={() => setHasHierarchy(false)} className={`px-3 py-1 rounded text-sm font-medium transition ${!hasHierarchy ? "bg-red-500 text-white" : "bg-gray-200 text-gray-600"}`}>Flat</button>
+            <button onClick={() => setHasHierarchy(true)} className={`px-3 py-1 rounded text-sm font-medium transition ${hasHierarchy ? "bg-green-500 text-white" : "bg-gray-200 text-gray-600"}`}>Hierarchical</button>
+          </div>
+          <div className="w-full max-w-sm bg-white rounded-xl shadow-lg p-6 text-center transition-all duration-500">
+            <div className="transition-all duration-500" style={{ fontSize: hasHierarchy ? 28 : 14, fontWeight: hasHierarchy ? 800 : 400, color: hasHierarchy ? "#1e1b4b" : "#6b7280" }}>Design Workshop</div>
+            <div className="transition-all duration-500" style={{ fontSize: hasHierarchy ? 16 : 14, fontWeight: hasHierarchy ? 500 : 400, color: hasHierarchy ? "#6366f1" : "#6b7280", marginTop: hasHierarchy ? 4 : 8 }}>Learn the fundamentals of visual design</div>
+            <div className="transition-all duration-500" style={{ fontSize: hasHierarchy ? 13 : 14, color: hasHierarchy ? "#9ca3af" : "#6b7280", marginTop: hasHierarchy ? 12 : 8 }}>March 28, 2026 &middot; 2:00 PM &middot; Room 204</div>
+            <div className="transition-all duration-500" style={{ display: "inline-block", marginTop: 16, padding: hasHierarchy ? "10px 28px" : "6px 12px", borderRadius: 8, background: hasHierarchy ? "#6366f1" : "#d1d5db", color: hasHierarchy ? "#fff" : "#6b7280", fontWeight: hasHierarchy ? 700 : 400, fontSize: hasHierarchy ? 16 : 14 }}>Register Now</div>
+          </div>
+          <p className="text-sm text-gray-500 italic text-center max-w-xs">{hasHierarchy ? "Clear size and weight differences guide the eye: title, subtitle, details, action." : "When everything is the same size and weight, nothing stands out."}</p>
+        </div>
+      );
+    }
+
+    function WhiteSpaceDemo() {
+      const [spacious, setSpacious] = useState(false);
+      return (
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex gap-2 mb-2">
+            <button onClick={() => setSpacious(false)} className={`px-3 py-1 rounded text-sm font-medium transition ${!spacious ? "bg-red-500 text-white" : "bg-gray-200 text-gray-600"}`}>Cramped</button>
+            <button onClick={() => setSpacious(true)} className={`px-3 py-1 rounded text-sm font-medium transition ${spacious ? "bg-green-500 text-white" : "bg-gray-200 text-gray-600"}`}>Spacious</button>
+          </div>
+          <div className="w-full max-w-sm bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-500" style={{ padding: spacious ? 32 : 10 }}>
+            <h3 className="font-bold text-gray-800 transition-all duration-500" style={{ marginBottom: spacious ? 16 : 4, fontSize: spacious ? 20 : 16 }}>The Art of Simplicity</h3>
+            <p className="text-gray-600 transition-all duration-500" style={{ lineHeight: spacious ? 1.8 : 1.2, fontSize: 13, marginBottom: spacious ? 20 : 4 }}>Good design is as little design as possible. Less, but better — because it concentrates on the essential aspects.</p>
+            <p className="text-gray-600 transition-all duration-500" style={{ lineHeight: spacious ? 1.8 : 1.2, fontSize: 13 }}>Back to purity, back to simplicity. Every element should serve a purpose and earn its place.</p>
+          </div>
+          <p className="text-sm text-gray-500 italic text-center max-w-xs">{spacious ? "Generous padding and line height create an elegant, readable layout." : "Tight spacing feels cramped and overwhelming, even with the same content."}</p>
+        </div>
+      );
+    }
+
+    const DEMO_MAP = { contrast: ContrastDemo, alignment: AlignmentDemo, repetition: RepetitionDemo, proximity: ProximityDemo, hierarchy: HierarchyDemo, whitespace: WhiteSpaceDemo };
+
+    /* ─── Quiz Data ─── */
+
+    const QUIZ_QUESTIONS = [
+      { question: "A poster uses the same gray tone for both its headline and body text. Which principle is being violated?", options: ["Proximity", "Contrast", "Repetition", "White Space"], correct: 1, explanation: "Without contrast in size, weight, or color, the headline doesn't stand out from the body text." },
+      { question: "A business card has the name centered, the phone number left-aligned, and the email right-aligned. What principle is broken?", options: ["Hierarchy", "Alignment", "Contrast", "Proximity"], correct: 1, explanation: "Mixing alignments without purpose creates a scattered, unprofessional feel." },
+      { question: "A website uses a different font for every heading on the page. Which principle does this violate?", options: ["White Space", "Proximity", "Repetition", "Hierarchy"], correct: 2, explanation: "Repetition means using consistent visual elements. Different fonts for every heading breaks unity." },
+      { question: "On a form, the label 'Email' is closer to the input field below it than to the field above it. Which principle is this following correctly?", options: ["Contrast", "Alignment", "Proximity", "Repetition"], correct: 2, explanation: "Proximity groups related items together — a label should be closest to its own field." },
+      { question: "A flyer has six pieces of information all in the same font size and weight. What's the main problem?", options: ["Lack of white space", "Lack of hierarchy", "Lack of repetition", "Lack of proximity"], correct: 1, explanation: "Without visual hierarchy, the viewer can't tell what's most important or where to look first." },
+      { question: "A landing page feels cluttered even though it doesn't have much content. What principle would most likely fix this?", options: ["Repetition", "Alignment", "Contrast", "White Space"], correct: 3, explanation: "Adding more breathing room around elements reduces visual clutter and creates elegance." },
+    ];
+
+    const MATCHING_PAIRS = [
+      { principle: "Contrast", description: "Make a headline 3x larger than body text" },
+      { principle: "Alignment", description: "Snap all text blocks to the same left edge" },
+      { principle: "Repetition", description: "Use the same blue accent color on every page" },
+      { principle: "Proximity", description: "Move the caption closer to its photo" },
+      { principle: "Hierarchy", description: "Make the call-to-action button the boldest element" },
+      { principle: "White Space", description: "Double the margins around a key section" },
+    ];
+
+    const SPOT_PROBLEMS = [
+      { scenario: "A restaurant menu uses 7 different fonts, one for each section.", answer: "Repetition", hint: "Think about consistency across the design." },
+      { scenario: "A signup form places the 'Submit' button far from the last input, right next to an unrelated ad banner.", answer: "Proximity", hint: "Related things should be near each other." },
+      { scenario: "A company's landing page has a light gray headline on a white background.", answer: "Contrast", hint: "Can you clearly distinguish the important elements?" },
+    ];
+
+    /* ─── Main App ─── */
+
+    function App() {
+      const [section, setSection] = useState("learn");
+      const [activePrinciple, setActivePrinciple] = useState(0);
+      const [quizState, setQuizState] = useState({ current: 0, answers: [], showResult: false });
+      const [matchState, setMatchState] = useState({ selected: null, matched: [], wrong: null });
+      const [spotState, setSpotState] = useState({ current: 0, selected: null, feedback: null });
+      const [score, setScore] = useState({ quiz: 0, match: 0, spot: 0 });
+
+      const [shuffledDescriptions] = useState(() => {
+        const indices = MATCHING_PAIRS.map((_, i) => i);
+        for (let i = indices.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        return indices;
+      });
+
+      const sections = [
+        { id: "learn", label: "Learn", icon: "book-open" },
+        { id: "quiz", label: "Quiz", icon: "pencil" },
+        { id: "match", label: "Match", icon: "link" },
+        { id: "spot", label: "Spot It", icon: "magnifying-glass" },
+        { id: "results", label: "Results", icon: "trophy" },
+      ];
+
+      const totalPossible = QUIZ_QUESTIONS.length + MATCHING_PAIRS.length + SPOT_PROBLEMS.length;
+      const totalScore = score.quiz + score.match + score.spot;
+
+      function handleQuizAnswer(optionIndex) {
+        if (quizState.answers[quizState.current] !== undefined) return;
+        const isCorrect = optionIndex === QUIZ_QUESTIONS[quizState.current].correct;
+        const newAnswers = [...quizState.answers];
+        newAnswers[quizState.current] = optionIndex;
+        setQuizState({ ...quizState, answers: newAnswers });
+        if (isCorrect) setScore((s) => ({ ...s, quiz: s.quiz + 1 }));
+      }
+
+      function nextQuizQuestion() {
+        if (quizState.current < QUIZ_QUESTIONS.length - 1) {
+          setQuizState({ ...quizState, current: quizState.current + 1 });
+        } else {
+          setQuizState({ ...quizState, showResult: true });
+        }
+      }
+
+      function handleMatchSelect(principleIndex) {
+        if (matchState.matched.includes(principleIndex)) return;
+        setMatchState({ ...matchState, selected: principleIndex, wrong: null });
+      }
+
+      function handleMatchAttempt(descIndex) {
+        if (matchState.selected === null) return;
+        const actualPairIndex = shuffledDescriptions[descIndex];
+        if (matchState.matched.includes(actualPairIndex)) return;
+        if (matchState.selected === actualPairIndex) {
+          setMatchState({ selected: null, matched: [...matchState.matched, actualPairIndex], wrong: null });
+          setScore((s) => ({ ...s, match: s.match + 1 }));
+        } else {
+          setMatchState({ ...matchState, wrong: descIndex });
+          setTimeout(() => setMatchState((ms) => ({ ...ms, wrong: null })), 800);
+        }
+      }
+
+      function handleSpotAnswer(answer) {
+        const isCorrect = answer === SPOT_PROBLEMS[spotState.current].answer;
+        setSpotState({ ...spotState, selected: answer, feedback: isCorrect ? "correct" : "wrong" });
+        if (isCorrect) setScore((s) => ({ ...s, spot: s.spot + 1 }));
+      }
+
+      function nextSpotProblem() {
+        if (spotState.current < SPOT_PROBLEMS.length - 1) {
+          setSpotState({ current: spotState.current + 1, selected: null, feedback: null });
+        } else {
+          setSection("results");
+        }
+      }
+
+      const DemoComponent = DEMO_MAP[PRINCIPLES[activePrinciple].id];
+
+      return (
+        <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #faf5ff 100%)" }}>
+          {/* Header */}
+          <div className="text-center pt-10 pb-6 px-4">
+            <h1 className="text-3xl font-extrabold text-gray-800" style={{ letterSpacing: -0.5 }}>Design Principles Interactive</h1>
+            <p className="text-gray-500 mt-2 text-base max-w-md mx-auto">Learn the six core principles, then test your knowledge with quizzes, matching, and challenges.</p>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex justify-center gap-1 px-4 mb-8 flex-wrap">
+            {sections.map((s) => (
+              <button key={s.id} onClick={() => setSection(s.id)} className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200" style={{ background: section === s.id ? "#4f46e5" : "white", color: section === s.id ? "white" : "#6b7280", boxShadow: section === s.id ? "0 4px 14px rgba(79,70,229,0.3)" : "0 1px 3px rgba(0,0,0,0.08)" }}>
+                <FA icon={s.icon} style={{ marginRight: 6 }} /> {s.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="max-w-2xl mx-auto px-4 pb-16">
+
+            {/* ═══ LEARN ═══ */}
+            {section === "learn" && (
+              <div>
+                <div className="grid grid-cols-3 gap-2 mb-6">
+                  {PRINCIPLES.map((p, i) => (
+                    <button key={p.id} onClick={() => setActivePrinciple(i)} className="p-3 rounded-xl text-center transition-all duration-200" style={{ background: activePrinciple === i ? p.color : "white", color: activePrinciple === i ? "white" : p.color, boxShadow: activePrinciple === i ? `0 4px 14px ${p.color}44` : "0 1px 3px rgba(0,0,0,0.08)", transform: activePrinciple === i ? "scale(1.03)" : "scale(1)" }}>
+                      <div className="text-2xl"><FA icon={p.icon} /></div>
+                      <div className="text-xs font-semibold mt-1">{p.title}</div>
+                    </button>
+                  ))}
+                </div>
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300">
+                  <div className="p-1" style={{ background: PRINCIPLES[activePrinciple].color }} />
+                  <div className="p-6">
+                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                      <span className="text-2xl" style={{ color: PRINCIPLES[activePrinciple].color }}><FA icon={PRINCIPLES[activePrinciple].icon} /></span>
+                      {PRINCIPLES[activePrinciple].title}
+                    </h2>
+                    <p className="text-gray-600 mt-2">{PRINCIPLES[activePrinciple].summary}</p>
+                    <div className="mt-4 space-y-2">
+                      {PRINCIPLES[activePrinciple].tips.map((tip, i) => (
+                        <div key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                          <span className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ background: PRINCIPLES[activePrinciple].color }}>{i + 1}</span>
+                          {tip}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="border-t bg-gray-50 p-6">
+                    <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4 text-center">Interactive Demo</div>
+                    <DemoComponent />
+                  </div>
+                </div>
+                <div className="text-center mt-6">
+                  <button onClick={() => setSection("quiz")} className="px-6 py-3 bg-indigo-600 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition">Ready? Take the Quiz <FA icon="arrow-right" style={{ marginLeft: 6 }} /></button>
+                </div>
+              </div>
+            )}
+
+            {/* ═══ QUIZ ═══ */}
+            {section === "quiz" && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-800"><FA icon="circle-question" style={{ marginRight: 8, color: "#6366f1" }} />Multiple Choice Quiz</h2>
+                  <span className="text-sm text-gray-400">{quizState.current + 1} / {QUIZ_QUESTIONS.length}</span>
+                </div>
+                <div className="w-full h-2 bg-gray-100 rounded-full mb-6">
+                  <div className="h-2 bg-indigo-500 rounded-full transition-all duration-500" style={{ width: `${((quizState.current + 1) / QUIZ_QUESTIONS.length) * 100}%` }} />
+                </div>
+                {!quizState.showResult ? (
+                  <div>
+                    <p className="text-gray-700 font-medium mb-4">{QUIZ_QUESTIONS[quizState.current].question}</p>
+                    <div className="space-y-2">
+                      {QUIZ_QUESTIONS[quizState.current].options.map((opt, i) => {
+                        const answered = quizState.answers[quizState.current] !== undefined;
+                        const isCorrect = i === QUIZ_QUESTIONS[quizState.current].correct;
+                        const isSelected = quizState.answers[quizState.current] === i;
+                        let bg = "white", border = "#e5e7eb";
+                        if (answered && isCorrect) { bg = "#dcfce7"; border = "#22c55e"; }
+                        else if (answered && isSelected && !isCorrect) { bg = "#fef2f2"; border = "#ef4444"; }
+                        return (
+                          <button key={i} onClick={() => handleQuizAnswer(i)} className="w-full text-left p-3 rounded-lg border-2 text-sm transition-all" style={{ background: bg, borderColor: border, cursor: answered ? "default" : "pointer" }}>
+                            <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt}
+                            {answered && isCorrect && <span className="ml-2" style={{ color: "#22c55e" }}><FA icon="check" /></span>}
+                            {answered && isSelected && !isCorrect && <span className="ml-2" style={{ color: "#ef4444" }}><FA icon="xmark" /></span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {quizState.answers[quizState.current] !== undefined && (
+                      <div className="mt-4">
+                        <div className={`text-sm p-3 rounded-lg ${quizState.answers[quizState.current] === QUIZ_QUESTIONS[quizState.current].correct ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>{QUIZ_QUESTIONS[quizState.current].explanation}</div>
+                        <button onClick={nextQuizQuestion} className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">
+                          {quizState.current < QUIZ_QUESTIONS.length - 1 ? <span>Next Question <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span> : <span>See Results <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span>}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <div className="text-5xl mb-3" style={{ color: score.quiz >= 5 ? "#22c55e" : score.quiz >= 3 ? "#f59e0b" : "#6366f1" }}>
+                      {score.quiz >= 5 ? <FA icon="face-grin-stars" /> : score.quiz >= 3 ? <FA icon="thumbs-up" /> : <FA icon="book" />}
+                    </div>
+                    <div className="text-2xl font-bold text-gray-800">{score.quiz} / {QUIZ_QUESTIONS.length}</div>
+                    <p className="text-gray-500 mt-2">{score.quiz >= 5 ? "Excellent! You really know your design principles." : score.quiz >= 3 ? "Good job! Review the ones you missed." : "Keep studying — you'll get there!"}</p>
+                    <button onClick={() => setSection("match")} className="mt-4 px-5 py-2 bg-indigo-600 text-white rounded-full text-sm font-semibold">Try the Matching Game <FA icon="arrow-right" style={{ marginLeft: 4 }} /></button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ═══ MATCH ═══ */}
+            {section === "match" && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-lg font-bold text-gray-800 mb-1"><FA icon="link" style={{ marginRight: 8, color: "#6366f1" }} />Matching Game</h2>
+                <p className="text-sm text-gray-500 mb-5">Click a principle on the left, then click its matching description on the right.</p>
+                {matchState.matched.length === MATCHING_PAIRS.length ? (
+                  <div className="text-center py-8">
+                    <div className="text-5xl mb-3" style={{ color: "#ef4444" }}><FA icon="bullseye" /></div>
+                    <div className="text-2xl font-bold text-gray-800">All Matched!</div>
+                    <p className="text-gray-500 mt-2">You matched {score.match} of {MATCHING_PAIRS.length} on your first try.</p>
+                    <button onClick={() => setSection("spot")} className="mt-4 px-5 py-2 bg-indigo-600 text-white rounded-full text-sm font-semibold">Try Spot the Problem <FA icon="arrow-right" style={{ marginLeft: 4 }} /></button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      {MATCHING_PAIRS.map((pair, i) => {
+                        const isMatched = matchState.matched.includes(i);
+                        const isSelected = matchState.selected === i;
+                        return (
+                          <button key={i} onClick={() => handleMatchSelect(i)} className="w-full p-3 rounded-lg text-sm font-semibold text-left transition-all" style={{ background: isMatched ? "#dcfce7" : isSelected ? "#eef2ff" : "white", border: `2px solid ${isMatched ? "#22c55e" : isSelected ? "#6366f1" : "#e5e7eb"}`, opacity: isMatched ? 0.6 : 1, cursor: isMatched ? "default" : "pointer" }}>
+                            {isMatched ? <span><FA icon="check" style={{ color: "#22c55e", marginRight: 6 }} /></span> : ""}{pair.principle}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="space-y-2">
+                      {shuffledDescriptions.map((pairIndex, displayIndex) => {
+                        const isMatched = matchState.matched.includes(pairIndex);
+                        const isWrong = matchState.wrong === displayIndex;
+                        return (
+                          <button key={displayIndex} onClick={() => handleMatchAttempt(displayIndex)} className="w-full p-3 rounded-lg text-sm text-left transition-all" style={{ background: isMatched ? "#dcfce7" : isWrong ? "#fef2f2" : "white", border: `2px solid ${isMatched ? "#22c55e" : isWrong ? "#ef4444" : "#e5e7eb"}`, opacity: isMatched ? 0.6 : 1, cursor: isMatched ? "default" : "pointer" }}>
+                            {MATCHING_PAIRS[pairIndex].description}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ═══ SPOT IT ═══ */}
+            {section === "spot" && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-800"><FA icon="magnifying-glass" style={{ marginRight: 8, color: "#6366f1" }} />Spot the Problem</h2>
+                  <span className="text-sm text-gray-400">{spotState.current + 1} / {SPOT_PROBLEMS.length}</span>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-5">
+                  <p className="text-gray-800 font-medium text-sm leading-relaxed"><FA icon="quote-left" style={{ color: "#f59e0b", marginRight: 8, opacity: 0.5 }} />{SPOT_PROBLEMS[spotState.current].scenario}</p>
+                </div>
+                <p className="text-sm text-gray-600 mb-3 font-medium">Which principle is being violated?</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {PRINCIPLES.map((p) => {
+                    const isSelected = spotState.selected === p.title;
+                    const isCorrect = p.title === SPOT_PROBLEMS[spotState.current].answer;
+                    const answered = spotState.feedback !== null;
+                    let bg = "white", border = "#e5e7eb";
+                    if (answered && isCorrect) { bg = "#dcfce7"; border = "#22c55e"; }
+                    else if (answered && isSelected && !isCorrect) { bg = "#fef2f2"; border = "#ef4444"; }
+                    return (
+                      <button key={p.id} onClick={() => !answered && handleSpotAnswer(p.title)} className="p-3 rounded-lg text-sm font-medium transition-all text-left" style={{ background: bg, border: `2px solid ${border}`, cursor: answered ? "default" : "pointer" }}>
+                        <FA icon={p.icon} style={{ marginRight: 6, color: p.color }} /> {p.title}
+                      </button>
+                    );
+                  })}
+                </div>
+                {spotState.feedback && (
+                  <div className="mt-4">
+                    <div className={`text-sm p-3 rounded-lg ${spotState.feedback === "correct" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+                      {spotState.feedback === "correct"
+                        ? <span><FA icon="check-circle" style={{ marginRight: 6 }} />Correct! The answer is {SPOT_PROBLEMS[spotState.current].answer}.</span>
+                        : <span><FA icon="circle-xmark" style={{ marginRight: 6 }} />Not quite. The answer is {SPOT_PROBLEMS[spotState.current].answer}. Hint: {SPOT_PROBLEMS[spotState.current].hint}</span>}
+                    </div>
+                    <button onClick={nextSpotProblem} className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">
+                      {spotState.current < SPOT_PROBLEMS.length - 1 ? <span>Next <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span> : <span>See Final Results <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span>}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ═══ RESULTS ═══ */}
+            {section === "results" && (
+              <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+                <div className="text-6xl mb-4" style={{ color: totalScore >= totalPossible - 2 ? "#eab308" : totalScore >= totalPossible / 2 ? "#f59e0b" : "#6366f1" }}>
+                  {totalScore >= totalPossible - 2 ? <FA icon="trophy" /> : totalScore >= totalPossible / 2 ? <FA icon="star" /> : <FA icon="dumbbell" />}
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800">Your Results</h2>
+                <div className="text-5xl font-extrabold my-4" style={{ color: "#4f46e5" }}>{totalScore} / {totalPossible}</div>
+                <div className="grid grid-cols-3 gap-4 mt-6 mb-6">
+                  <div className="bg-indigo-50 rounded-xl p-4">
+                    <div className="text-xs text-indigo-400 font-semibold uppercase"><FA icon="circle-question" style={{ marginRight: 4 }} />Quiz</div>
+                    <div className="text-2xl font-bold text-indigo-700">{score.quiz}/{QUIZ_QUESTIONS.length}</div>
+                  </div>
+                  <div className="bg-green-50 rounded-xl p-4">
+                    <div className="text-xs text-green-400 font-semibold uppercase"><FA icon="link" style={{ marginRight: 4 }} />Match</div>
+                    <div className="text-2xl font-bold text-green-700">{score.match}/{MATCHING_PAIRS.length}</div>
+                  </div>
+                  <div className="bg-amber-50 rounded-xl p-4">
+                    <div className="text-xs text-amber-400 font-semibold uppercase"><FA icon="magnifying-glass" style={{ marginRight: 4 }} />Spot It</div>
+                    <div className="text-2xl font-bold text-amber-700">{score.spot}/{SPOT_PROBLEMS.length}</div>
+                  </div>
+                </div>
+                <p className="text-gray-500">{totalScore >= totalPossible - 2 ? "Outstanding! You have a strong grasp of design principles." : totalScore >= totalPossible / 2 ? "Solid work! Review the principles you missed and try again." : "Keep practicing! Head back to the Learn section to review."}</p>
+                <button onClick={() => { setSection("learn"); setQuizState({ current: 0, answers: [], showResult: false }); setMatchState({ selected: null, matched: [], wrong: null }); setSpotState({ current: 0, selected: null, feedback: null }); setScore({ quiz: 0, match: 0, spot: 0 }); }} className="mt-5 px-6 py-3 bg-indigo-600 text-white rounded-full font-semibold shadow-lg">
+                  <FA icon="rotate-right" style={{ marginRight: 6 }} /> Start Over
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
