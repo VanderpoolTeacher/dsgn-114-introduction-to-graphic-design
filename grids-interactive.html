@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Understanding Grids in Design</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-1: #f8fafc; --bg-2: #eef2ff; --bg-3: #faf5ff;
+      --surface: #ffffff; --surface-alt: #f9fafb;
+      --text-primary: #1f2937; --text-secondary: #6b7280; --text-muted: #9895ad;
+      --border: #e5e7eb;
+      --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+      --accent: #4f46e5;
+      --green-bg: #dcfce7; --green-border: #22c55e; --green-text: #15803d;
+      --red-bg: #fef2f2; --red-border: #ef4444; --red-text: #b91c1c;
+      --amber-bg: #fffbeb; --amber-border: #fbbf24;
+      --indigo-light: #eef2ff;
+      --green-light: #f0fdf4;
+      --amber-light: #fffbeb;
+    }
+    [data-theme="dark"] {
+      --bg-1: #0f0d1a; --bg-2: #1a1833; --bg-3: #1e1a2e;
+      --surface: #1e1b2e; --surface-alt: #262340;
+      --text-primary: #e2e0f0; --text-secondary: #a5a3b8; --text-muted: #9895ad;
+      --border: #2d2a3e;
+      --card-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15);
+      --accent: #6366f1;
+      --green-bg: #052e16; --green-border: #16a34a; --green-text: #86efac;
+      --red-bg: #350a0a; --red-border: #dc2626; --red-text: #fca5a5;
+      --amber-bg: #271e05; --amber-border: #d97706;
+      --indigo-light: #1e1b3a;
+      --green-light: #0a1f0d;
+      --amber-light: #1f1a08;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: var(--text-primary);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    * { min-font-size: 12pt; }
+    p, span, div, button, a, li, td, th, label, input, select, textarea {
+      font-size: max(12pt, inherit);
+      line-height: 1.5;
+    }
+    .allow-small { font-size: inherit !important; }
+
+    .toggle-bar {
+      position: fixed; top: 16px; right: 16px; z-index: 100;
+      display: flex; gap: 8px;
+    }
+    .theme-toggle-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: none;
+      background: var(--surface); color: var(--text-primary);
+      box-shadow: var(--card-shadow); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16pt; transition: background 0.3s, color 0.3s;
+    }
+    .theme-toggle-btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .theme-toggle-btn.active-bw { background: #1f2937; color: #fff; }
+    [data-theme="dark"] .theme-toggle-btn.active-bw { background: #e2e0f0; color: #1e1b2e; }
+
+    /* Grid overlay lines for demos */
+    .grid-overlay { position: relative; }
+    .grid-overlay::before {
+      content: ""; position: absolute; inset: 0;
+      pointer-events: none; z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, createContext, useContext } = React;
+
+    /* ─── Theme Context ─── */
+    const ThemeContext = createContext();
+    function useTheme() { return useContext(ThemeContext); }
+
+    function ThemeProvider({ children }) {
+      const [dark, setDark] = useState(false);
+      const [bw, setBw] = useState(false);
+      useEffect(() => {
+        try { setDark(localStorage.getItem('theme') === 'dark'); } catch(e) {}
+        try { setBw(localStorage.getItem('bw') === 'true'); } catch(e) {}
+      }, []);
+      useEffect(() => {
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch(e) {}
+      }, [dark]);
+      useEffect(() => {
+        document.documentElement.style.filter = bw ? 'grayscale(1)' : 'none';
+        try { localStorage.setItem('bw', bw ? 'true' : 'false'); } catch(e) {}
+      }, [bw]);
+      return <ThemeContext.Provider value={{ dark, toggle: () => setDark(d => !d), bw, toggleBw: () => setBw(b => !b) }}>{children}</ThemeContext.Provider>;
+    }
+
+    function ThemeToggle() {
+      const { dark, toggle, bw, toggleBw } = useTheme();
+      return (
+        <div className="toggle-bar">
+          <button className={`theme-toggle-btn${bw ? ' active-bw' : ''}`} onClick={toggleBw} aria-label="Toggle black and white mode" title="Black & white mode">
+            <i className="fa-solid fa-droplet-slash" />
+          </button>
+          <button className="theme-toggle-btn" onClick={toggle} aria-label="Toggle dark mode" title="Dark mode">
+            <i className={`fa-solid ${dark ? 'fa-sun' : 'fa-moon'}`} />
+          </button>
+        </div>
+      );
+    }
+
+    function FA({ icon, className = "", style = {} }) {
+      return <i className={`fa-solid fa-${icon} ${className}`} style={style} />;
+    }
+
+    /* ─── Color helpers ─── */
+    function useColors() {
+      const { dark } = useTheme();
+      return {
+        bg: dark ? "linear-gradient(135deg, #0f0d1a 0%, #1a1833 50%, #1e1a2e 100%)" : "linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #faf5ff 100%)",
+        surface: dark ? "#1e1b2e" : "#ffffff",
+        surfaceAlt: dark ? "#262340" : "#f9fafb",
+        text: dark ? "#e2e0f0" : "#1f2937",
+        textSec: dark ? "#a5a3b8" : "#6b7280",
+        textMuted: dark ? "#9895ad" : "#9ca3af",
+        border: dark ? "#2d2a3e" : "#e5e7eb",
+        greenBg: dark ? "#052e16" : "#dcfce7",
+        greenText: dark ? "#86efac" : "#15803d",
+        redBg: dark ? "#350a0a" : "#fef2f2",
+        redText: dark ? "#fca5a5" : "#b91c1c",
+        amberBg: dark ? "#271e05" : "#fffbeb",
+        indigoBg: dark ? "#1e1b3a" : "#eef2ff",
+        greenLightBg: dark ? "#0a1f0d" : "#f0fdf4",
+        indigo50: dark ? "#1e1b3a" : "#eef2ff",
+        green50: dark ? "#0a1f0d" : "#f0fdf4",
+        amber50: dark ? "#1f1a08" : "#fffbeb",
+        cardShadow: dark ? "0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15)" : "0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04)",
+      };
+    }
+
+    /* ─── Grid Topics ─── */
+    const TOPICS = [
+      {
+        id: "what", title: "What is a Grid?", color: "#6366f1", icon: "border-all",
+        summary: "A grid is an invisible framework of columns, rows, margins, and gutters that organizes content on a page. The industry standard is a 12-column grid.",
+        tips: ["Grids create visual order and alignment across an entire design", "The 12-column grid is the most common because 12 divides evenly by 2, 3, 4, and 6", "Professional designers use grids for nearly every layout — web, print, and mobile"]
+      },
+      {
+        id: "twelve", title: "The 12-Column Grid", color: "#0ea5e9", icon: "table-columns",
+        summary: "The 12-column grid is the backbone of modern layout design. Content spans groups of columns — 6 of 12 for half-width, 4 of 12 for thirds, 3 of 12 for quarters, and so on.",
+        tips: ["12 divides by 2 (6+6), 3 (4+4+4), 4 (3+3+3+3), and 6 (2+2+2+2+2+2)", "Content never sits in a single column — it always spans groups of columns", "The more columns you span, the more visual weight that content carries"]
+      },
+      {
+        id: "gutters", title: "Gutters & Margins", color: "#10b981", icon: "arrows-left-right",
+        summary: "Gutters are the spaces between columns. Margins are the spaces on the outer edges. Together they create breathing room and prevent content from feeling cramped.",
+        tips: ["Consistent gutter width unifies the layout", "Wider gutters feel more open and modern", "Margins frame the content and protect against edge-cropping"]
+      },
+      {
+        id: "hierarchy", title: "Grid Hierarchy", color: "#f59e0b", icon: "layer-group",
+        summary: "By spanning content across different numbers of columns, you create visual hierarchy. A headline spanning 12 columns dominates; a sidebar spanning 3 feels secondary.",
+        tips: ["Wider spans = more visual importance", "Use asymmetric column spans for dynamic layouts (e.g. 8+4 instead of 6+6)", "Combine narrow sidebars with wide content areas"]
+      },
+      {
+        id: "breaking", title: "Breaking the Grid", color: "#ef4444", icon: "wand-magic-sparkles",
+        summary: "Intentionally breaking the grid creates visual surprise and draws attention. The key is to break it purposefully — the grid still exists, you're just bending it.",
+        tips: ["Break the grid only after establishing it first", "Use breakouts sparingly for maximum impact", "Overlapping elements across column lines creates energy"]
+      },
+      {
+        id: "responsive", title: "Responsive Grids", color: "#8b5cf6", icon: "mobile-screen",
+        summary: "Responsive grids adapt to different screen sizes. The 12-column desktop grid becomes 8 columns on tablet and 4 columns on phone.",
+        tips: ["Desktop: 12 columns, Tablet: 8 columns, Phone: 4 columns", "Content should reflow gracefully — a 6-col span becomes full-width on phone", "Test your grid at multiple breakpoints"]
+      },
+    ];
+
+    /* ─── Shared: 12-column overlay ─── */
+    function GridOverlay12({ accent, opacity = 0.10 }) {
+      return (
+        <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 4, padding: "0 16px", opacity, pointerEvents: "none" }}>
+          {[...Array(12)].map((_, i) => <div key={i} style={{ background: accent, borderRadius: 2 }} />)}
+        </div>
+      );
+    }
+
+    /* Column label row */
+    function ColLabels({ count, accent, c }) {
+      return (
+        <div className="allow-small" style={{ display: "grid", gridTemplateColumns: `repeat(${count}, 1fr)`, gap: 4, marginBottom: 6 }}>
+          {[...Array(count)].map((_, i) => (
+            <div key={i} style={{ textAlign: "center", fontSize: "8pt", fontWeight: 600, color: accent, opacity: 0.7 }}>{i + 1}</div>
+          ))}
+        </div>
+      );
+    }
+
+    /* ─── Interactive Demo Components ─── */
+
+    function WhatIsGridDemo() {
+      const [showGrid, setShowGrid] = useState(false);
+      const c = useColors();
+      const accent = "#6366f1";
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <button onClick={() => setShowGrid(false)} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: !showGrid ? "#ef4444" : c.border, color: !showGrid ? "#fff" : c.textSec, transition: "all 0.3s" }}>Without Grid</button>
+            <button onClick={() => setShowGrid(true)} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: showGrid ? "#22c55e" : c.border, color: showGrid ? "#fff" : c.textSec, transition: "all 0.3s" }}>With 12-Col Grid</button>
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 20, position: "relative", overflow: "hidden", transition: "all 0.5s" }}>
+            {showGrid && <GridOverlay12 accent={accent} />}
+            {showGrid && <ColLabels count={12} accent={accent} c={c} />}
+            <div style={{ position: "relative", zIndex: 2 }}>
+              {!showGrid ? (
+                /* No grid: content misaligned, random widths and placements */
+                <div>
+                  <div style={{ fontSize: "16pt", fontWeight: 700, color: c.text, marginBottom: 8, textAlign: "center" }}>Newsletter</div>
+                  <div style={{ width: "70%", background: c.surfaceAlt, borderRadius: 8, padding: 12, border: `1px solid ${c.border}`, marginBottom: 10 }}>
+                    <div style={{ fontSize: "12pt", fontWeight: 600, color: c.text }}>Feature Story</div>
+                    <div style={{ fontSize: "12pt", color: c.textSec, marginTop: 4 }}>Main article — but oddly sized, not aligned to anything.</div>
+                  </div>
+                  <div style={{ width: "45%", marginLeft: "10%", background: c.surfaceAlt, borderRadius: 8, padding: 12, border: `1px solid ${c.border}`, marginBottom: 10 }}>
+                    <div style={{ fontSize: "12pt", fontWeight: 600, color: c.text }}>Side Story</div>
+                    <div style={{ fontSize: "12pt", color: c.textSec, marginTop: 2 }}>Doesn't line up with anything.</div>
+                  </div>
+                  <div style={{ width: "55%", marginLeft: "30%", background: c.surfaceAlt, borderRadius: 8, padding: 12, border: `1px solid ${c.border}` }}>
+                    <div style={{ fontSize: "12pt", fontWeight: 600, color: c.text }}>Quick Links</div>
+                    <div style={{ fontSize: "12pt", color: c.textSec, marginTop: 2 }}>Random placement, random width.</div>
+                  </div>
+                </div>
+              ) : (
+                /* With 12-col grid: content snaps to column spans */
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 4 }}>
+                  <div style={{ gridColumn: "1 / 13", fontSize: "16pt", fontWeight: 700, color: c.text, marginBottom: 4 }}>Newsletter</div>
+                  <div style={{ gridColumn: "1 / 9", background: c.surfaceAlt, borderRadius: 8, padding: 12, border: `1px solid ${c.border}` }}>
+                    <div style={{ fontSize: "12pt", fontWeight: 600, color: c.text }}>Feature Story <span className="allow-small" style={{ fontSize: "9pt", color: accent, fontWeight: 400 }}>(cols 1–8)</span></div>
+                    <div style={{ fontSize: "12pt", color: c.textSec, marginTop: 4 }}>Main article spanning 8 of 12 columns for emphasis.</div>
+                  </div>
+                  <div style={{ gridColumn: "9 / 13", display: "flex", flexDirection: "column", gap: 4 }}>
+                    <div style={{ flex: 1, background: c.surfaceAlt, borderRadius: 8, padding: 10, border: `1px solid ${c.border}` }}>
+                      <div style={{ fontSize: "12pt", fontWeight: 600, color: c.text }}>Side Story <span className="allow-small" style={{ fontSize: "9pt", color: accent, fontWeight: 400 }}>(9–12)</span></div>
+                    </div>
+                    <div style={{ flex: 1, background: c.surfaceAlt, borderRadius: 8, padding: 10, border: `1px solid ${c.border}` }}>
+                      <div style={{ fontSize: "12pt", fontWeight: 600, color: c.text }}>Quick Links <span className="allow-small" style={{ fontSize: "9pt", color: accent, fontWeight: 400 }}>(9–12)</span></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <p style={{ fontSize: "12pt", color: c.textMuted, fontStyle: "italic", textAlign: "center", maxWidth: 400 }}>{showGrid ? "Content snaps to a 12-column grid — edges align, proportions are intentional (8+4 split)." : "Without a grid, elements have random widths and don't align to each other."}</p>
+        </div>
+      );
+    }
+
+    function TwelveColDemo() {
+      const [preset, setPreset] = useState("halves");
+      const c = useColors();
+      const accent = "#0ea5e9";
+      const presets = {
+        halves: { label: "Halves (6+6)", rows: [[6,6]] },
+        thirds: { label: "Thirds (4+4+4)", rows: [[4,4,4]] },
+        quarters: { label: "Quarters (3×4)", rows: [[3,3,3,3]] },
+        sixths: { label: "Sixths (2×6)", rows: [[2,2,2,2,2,2]] },
+        sidebar: { label: "Sidebar (3+9)", rows: [[3,9]] },
+        asymmetric: { label: "Mixed (4+8, 6+3+3)", rows: [[4,8],[6,3,3]] },
+        complex: { label: "Complex (12, 8+4, 3+3+3+3)", rows: [[12],[8,4],[3,3,3,3]] },
+      };
+      const p = presets[preset];
+      const colors = ["#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap", justifyContent: "center" }}>
+            {Object.entries(presets).map(([k, v]) => (
+              <button key={k} onClick={() => setPreset(k)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: preset === k ? accent : c.border, color: preset === k ? "#fff" : c.textSec, transition: "all 0.3s" }}>{v.label}</button>
+            ))}
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 20, position: "relative", overflow: "hidden" }}>
+            <GridOverlay12 accent={accent} opacity={0.06} />
+            <ColLabels count={12} accent={accent} c={c} />
+            <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", gap: 6 }}>
+              {p.rows.map((row, ri) => (
+                <div key={ri} style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 4 }}>
+                  {row.map((span, ci) => {
+                    const clr = colors[(ri * 4 + ci) % colors.length];
+                    return (
+                      <div key={ci} style={{ gridColumn: `span ${span}`, height: 56, borderRadius: 8, background: `${clr}20`, border: `2px solid ${clr}55`, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.4s" }}>
+                        <span style={{ fontSize: "12pt", fontWeight: 700, color: clr }}>{span} col{span > 1 ? "s" : ""}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+          <p style={{ fontSize: "12pt", color: c.textMuted, fontStyle: "italic", textAlign: "center", maxWidth: 420 }}>
+            {preset === "halves" ? "6+6 = two equal halves. Simple, balanced — great for two-column layouts." :
+             preset === "thirds" ? "4+4+4 = three equal thirds. The classic magazine and web layout." :
+             preset === "quarters" ? "3+3+3+3 = four equal quarters. Ideal for card grids and dashboards." :
+             preset === "sixths" ? "2+2+2+2+2+2 = six equal blocks. Maximum density for icon rows or nav." :
+             preset === "sidebar" ? "3+9 = narrow sidebar + wide content. The classic app or blog layout." :
+             preset === "asymmetric" ? "Mix different spans across rows. Row 1: 4+8 (sidebar+content), Row 2: 6+3+3 (featured+two small)." :
+             "Combine full-width, asymmetric, and quarter rows. This is the power of 12 columns."}
+          </p>
+        </div>
+      );
+    }
+
+    function GuttersDemo() {
+      const [gutterSize, setGutterSize] = useState("medium");
+      const c = useColors();
+      const accent = "#10b981";
+      const gaps = { none: 0, small: 2, medium: 6, large: 14 };
+      const margins = { none: 4, small: 8, medium: 16, large: 32 };
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            {["none", "small", "medium", "large"].map(s => (
+              <button key={s} onClick={() => setGutterSize(s)} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: gutterSize === s ? accent : c.border, color: gutterSize === s ? "#fff" : c.textSec, transition: "all 0.3s", textTransform: "capitalize" }}>{s}</button>
+            ))}
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: margins[gutterSize], transition: "all 0.5s" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: gaps[gutterSize], transition: "all 0.5s" }}>
+              {[...Array(12)].map((_, i) => (
+                <div key={i} style={{ height: 56, borderRadius: 4, background: `${accent}22`, border: `1px solid ${accent}44`, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.5s" }}>
+                  <span className="allow-small" style={{ fontSize: "8pt", fontWeight: 600, color: accent }}>{i + 1}</span>
+                </div>
+              ))}
+            </div>
+            {/* Show content row too */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: gaps[gutterSize], marginTop: gaps[gutterSize] || 2, transition: "all 0.5s" }}>
+              <div style={{ gridColumn: "span 8", height: 40, borderRadius: 6, background: c.surfaceAlt, border: `1px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12pt", color: c.textSec, transition: "all 0.5s" }}>Content (8 cols)</div>
+              <div style={{ gridColumn: "span 4", height: 40, borderRadius: 6, background: c.surfaceAlt, border: `1px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12pt", color: c.textSec, transition: "all 0.5s" }}>Sidebar (4)</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 16, fontSize: "12pt", color: c.textSec }}>
+            <span><FA icon="arrows-left-right" style={{ marginRight: 4, color: accent }} />Gutter: {gaps[gutterSize]}px</span>
+            <span><FA icon="border-top-left" style={{ marginRight: 4, color: accent }} />Margin: {margins[gutterSize]}px</span>
+          </div>
+          <p style={{ fontSize: "12pt", color: c.textMuted, fontStyle: "italic", textAlign: "center", maxWidth: 400 }}>
+            {gutterSize === "none" ? "No gutters — columns merge together. Content boundaries disappear." :
+             gutterSize === "small" ? "Tight gutters: dense but still readable. Good for data-heavy dashboards." :
+             gutterSize === "medium" ? "Medium gutters: the industry standard. Balanced density and readability." :
+             "Generous gutters: an open, premium feel. Great for editorial and luxury design."}
+          </p>
+        </div>
+      );
+    }
+
+    function HierarchyDemo() {
+      const [layout, setLayout] = useState("equal");
+      const c = useColors();
+      const accent = "#f59e0b";
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <button onClick={() => setLayout("equal")} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: layout === "equal" ? "#ef4444" : c.border, color: layout === "equal" ? "#fff" : c.textSec, transition: "all 0.3s" }}>No Hierarchy (4+4+4)</button>
+            <button onClick={() => setLayout("featured")} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: layout === "featured" ? "#22c55e" : c.border, color: layout === "featured" ? "#fff" : c.textSec, transition: "all 0.3s" }}>With Hierarchy (8+4)</button>
+            <button onClick={() => setLayout("hero")} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: layout === "hero" ? accent : c.border, color: layout === "hero" ? "#fff" : c.textSec, transition: "all 0.3s" }}>Hero (12, 4+4+4)</button>
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 20, position: "relative", overflow: "hidden" }}>
+            <GridOverlay12 accent={accent} opacity={0.06} />
+            <div style={{ position: "relative", zIndex: 2 }}>
+              {layout === "equal" && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 6 }}>
+                  {["News", "Sports", "Weather"].map((t, i) => (
+                    <div key={i} style={{ gridColumn: "span 4", background: `${accent}15`, border: `1px solid ${accent}44`, borderRadius: 8, padding: 12, textAlign: "center" }}>
+                      <div style={{ width: "100%", height: 48, background: `${accent}22`, borderRadius: 6, marginBottom: 8 }} />
+                      <div style={{ fontSize: "12pt", fontWeight: 600, color: c.text }}>{t}</div>
+                      <div className="allow-small" style={{ fontSize: "9pt", color: accent, marginTop: 2 }}>4 cols</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {layout === "featured" && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 6 }}>
+                  <div style={{ gridColumn: "span 8", background: `${accent}15`, border: `1px solid ${accent}44`, borderRadius: 8, padding: 16 }}>
+                    <div style={{ width: "100%", height: 80, background: `${accent}22`, borderRadius: 6, marginBottom: 8 }} />
+                    <div style={{ fontSize: "14pt", fontWeight: 700, color: c.text }}>Main Feature <span className="allow-small" style={{ fontSize: "9pt", color: accent, fontWeight: 400 }}>(8 cols)</span></div>
+                    <div style={{ fontSize: "12pt", color: c.textSec, marginTop: 4 }}>Spanning 8 of 12 columns gives this content dominant visual weight.</div>
+                  </div>
+                  <div style={{ gridColumn: "span 4", display: "flex", flexDirection: "column", gap: 6 }}>
+                    {["Related", "Trending"].map((t, i) => (
+                      <div key={i} style={{ flex: 1, background: c.surfaceAlt, border: `1px solid ${c.border}`, borderRadius: 8, padding: 10 }}>
+                        <div style={{ fontSize: "12pt", fontWeight: 600, color: c.text }}>{t} <span className="allow-small" style={{ fontSize: "9pt", color: accent, fontWeight: 400 }}>(4 cols)</span></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {layout === "hero" && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 6 }}>
+                  <div style={{ gridColumn: "span 12", height: 90, background: `${accent}22`, border: `1px solid ${accent}44`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: "18pt", fontWeight: 800, color: c.text }}>HERO BANNER</div>
+                      <div className="allow-small" style={{ fontSize: "9pt", color: accent }}>spans all 12 columns</div>
+                    </div>
+                  </div>
+                  {["News", "Sports", "Weather"].map((t, i) => (
+                    <div key={i} style={{ gridColumn: "span 4", height: 48, background: c.surfaceAlt, borderRadius: 6, border: `1px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12pt", fontWeight: 600, color: c.text }}>
+                      {t} <span className="allow-small" style={{ fontSize: "9pt", color: accent, marginLeft: 4 }}>(4)</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <p style={{ fontSize: "12pt", color: c.textMuted, fontStyle: "italic", textAlign: "center", maxWidth: 400 }}>
+            {layout === "equal" ? "All items span 4 columns each — equal weight, no hierarchy. Nothing stands out." :
+             layout === "featured" ? "8+4 split creates clear hierarchy — the feature dominates, sidebar supports." :
+             "12-col hero on top, then three 4-col items below. The hero commands attention, supporting content follows."}
+          </p>
+        </div>
+      );
+    }
+
+    function BreakingDemo() {
+      const [mode, setMode] = useState("strict");
+      const c = useColors();
+      const accent = "#ef4444";
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <button onClick={() => setMode("strict")} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: mode === "strict" ? "#0ea5e9" : c.border, color: mode === "strict" ? "#fff" : c.textSec, transition: "all 0.3s" }}>Strict 12-Col Grid</button>
+            <button onClick={() => setMode("broken")} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: mode === "broken" ? accent : c.border, color: mode === "broken" ? "#fff" : c.textSec, transition: "all 0.3s" }}>Breaking the Grid</button>
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 20, position: "relative", overflow: "hidden" }}>
+            <GridOverlay12 accent="#6366f1" opacity={0.06} />
+            <div style={{ position: "relative", zIndex: 2, display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 4 }}>
+              <div style={{ gridColumn: "1 / -1", height: 44, background: c.surfaceAlt, border: `1px solid ${c.border}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12pt", fontWeight: 600, color: c.textSec }}>Header (12 cols)</div>
+              <div style={{ gridColumn: mode === "broken" ? "1 / 10" : "1 / 9", height: 80, background: mode === "broken" ? `${accent}22` : c.surfaceAlt, border: `1px solid ${mode === "broken" ? accent+"66" : c.border}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.5s" }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "12pt", fontWeight: 700, color: mode === "broken" ? accent : c.text }}>Feature Image</div>
+                  <div className="allow-small" style={{ fontSize: "9pt", color: mode === "broken" ? accent : c.textSec }}>{mode === "broken" ? "Breaks into col 9 — steals space from sidebar" : "Cols 1–8 (stays in its lane)"}</div>
+                </div>
+              </div>
+              <div style={{ gridColumn: mode === "broken" ? "10 / 13" : "9 / 13", display: "flex", flexDirection: "column", gap: 4, transition: "all 0.5s" }}>
+                <div style={{ flex: 1, background: c.surfaceAlt, border: `1px solid ${c.border}`, borderRadius: 8, padding: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ fontSize: "12pt", fontWeight: 600, color: c.text }}>Sidebar</div>
+                </div>
+              </div>
+              <div style={{ gridColumn: "1 / -1", height: 36, background: c.surfaceAlt, border: `1px solid ${c.border}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12pt", color: c.textSec }}>Footer (12 cols)</div>
+            </div>
+          </div>
+          <p style={{ fontSize: "12pt", color: c.textMuted, fontStyle: "italic", textAlign: "center", maxWidth: 400 }}>
+            {mode === "strict" ? "Strict 12-column grid: feature (cols 1–8), sidebar (cols 9–12). Everything aligned." :
+             "The feature image breaks past column 8 into column 9, overlapping the sidebar's space. This creates visual energy and draws the eye."}
+          </p>
+        </div>
+      );
+    }
+
+    function ResponsiveDemo() {
+      const [device, setDevice] = useState("desktop");
+      const c = useColors();
+      const accent = "#8b5cf6";
+      const configs = {
+        desktop: { cols: 12, width: "100%", label: "Desktop (12 col)" },
+        tablet: { cols: 8, width: "72%", label: "Tablet (8 col)" },
+        phone: { cols: 4, width: "40%", label: "Phone (4 col)" },
+      };
+      const cfg = configs[device];
+      /* Layout adapts: Hero always full, Article+Sidebar reflow */
+      const heroSpan = cfg.cols;
+      const articleSpan = device === "desktop" ? 8 : device === "tablet" ? 5 : 4;
+      const sidebarSpan = device === "desktop" ? 4 : device === "tablet" ? 3 : 4;
+      const footerSpan = cfg.cols;
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            {Object.entries(configs).map(([k, v]) => (
+              <button key={k} onClick={() => setDevice(k)} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: device === k ? accent : c.border, color: device === k ? "#fff" : c.textSec, transition: "all 0.3s" }}>
+                <FA icon={k === "desktop" ? "desktop" : k === "tablet" ? "tablet-screen-button" : "mobile-screen"} style={{ marginRight: 6 }} />{v.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ width: cfg.width, maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 16, transition: "all 0.5s", minWidth: 170, position: "relative", overflow: "hidden" }}>
+            <GridOverlay12 accent={accent} opacity={0.05} />
+            <ColLabels count={cfg.cols} accent={accent} c={c} />
+            <div style={{ position: "relative", zIndex: 2, display: "grid", gridTemplateColumns: `repeat(${cfg.cols}, 1fr)`, gap: 4, transition: "all 0.5s" }}>
+              <div style={{ gridColumn: `span ${heroSpan}`, height: 48, background: `${accent}18`, border: `1px solid ${accent}44`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12pt", fontWeight: 600, color: accent, transition: "all 0.5s" }}>Hero ({heroSpan})</div>
+              <div style={{ gridColumn: `span ${articleSpan}`, height: 64, background: `${accent}18`, border: `1px solid ${accent}44`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12pt", fontWeight: 600, color: accent, transition: "all 0.5s" }}>Article ({articleSpan})</div>
+              <div style={{ gridColumn: `span ${sidebarSpan}`, height: 64, background: `${accent}18`, border: `1px solid ${accent}44`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12pt", fontWeight: 600, color: accent, transition: "all 0.5s" }}>Sidebar ({sidebarSpan})</div>
+              <div style={{ gridColumn: `span ${footerSpan}`, height: 32, background: `${accent}18`, border: `1px solid ${accent}44`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12pt", fontWeight: 600, color: accent, transition: "all 0.5s" }}>Footer ({footerSpan})</div>
+            </div>
+          </div>
+          <p style={{ fontSize: "12pt", color: c.textMuted, fontStyle: "italic", textAlign: "center", maxWidth: 400 }}>
+            {device === "desktop" ? "Desktop: 12 columns. Article (8) + Sidebar (4) sit side by side." :
+             device === "tablet" ? "Tablet: 8 columns. Article (5) + Sidebar (3) still side by side, but tighter." :
+             "Phone: 4 columns. Article and Sidebar each take full width (4), stacking vertically."}
+          </p>
+        </div>
+      );
+    }
+
+    const DEMO_MAP = { "what": WhatIsGridDemo, "twelve": TwelveColDemo, "gutters": GuttersDemo, "hierarchy": HierarchyDemo, "breaking": BreakingDemo, "responsive": ResponsiveDemo };
+
+    /* ─── Quiz Questions ─── */
+    const QUIZ_QUESTIONS = [
+      { question: "What is the primary purpose of using a grid in design?", options: ["To make the design look more complex", "To organize content with structure and consistency", "To fill empty space on the page", "To create decorative patterns"], correct: 1, explanation: "A grid provides an invisible framework that organizes content, creating visual order and consistency across the layout." },
+      { question: "Which column count is considered the most versatile for grid layouts?", options: ["5 columns", "7 columns", "12 columns", "10 columns"], correct: 2, explanation: "12 columns are the most versatile because 12 is divisible by 2, 3, 4, and 6 — allowing many different content arrangements." },
+      { question: "In a 12-column grid, how would you create a layout with a sidebar and main content area (roughly 1/4 + 3/4)?", options: ["Sidebar: 4 cols, Content: 8 cols", "Sidebar: 6 cols, Content: 6 cols", "Sidebar: 2 cols, Content: 10 cols", "Sidebar: 3 cols, Content: 9 cols"], correct: 3, explanation: "3 + 9 = 12, giving the sidebar exactly 1/4 and the content area 3/4 of the total width. 4+8 also works but gives 1/3 + 2/3." },
+      { question: "What are gutters in a grid system?", options: ["The outer borders of the page", "The spaces between columns", "The header and footer areas", "The background color zones"], correct: 1, explanation: "Gutters are the gaps between columns that create breathing room and prevent content from running together." },
+      { question: "How do you create visual hierarchy using a grid?", options: ["Make all columns the same width", "Use different fonts in each column", "Span content across different numbers of columns", "Add more gutters"], correct: 2, explanation: "By allowing some content to span more columns than others, you make it visually larger and more prominent, creating hierarchy." },
+      { question: "When is it appropriate to break the grid?", options: ["Whenever you feel like it", "Never — grids should always be followed strictly", "After establishing the grid, to create intentional visual surprise", "Only on the first page of a document"], correct: 2, explanation: "Breaking the grid is a deliberate design choice. You must first establish the grid so the break feels intentional and draws attention." },
+      { question: "What happens to a 12-column grid on a phone-sized screen in responsive design?", options: ["It stays at 12 columns but shrinks", "Columns typically reduce to 4 and content stacks", "The grid disappears entirely", "Only the margins change"], correct: 1, explanation: "In responsive design, the column count reduces (e.g., 12 → 8 → 4) and content reflows to stack vertically on smaller screens." },
+    ];
+
+    /* ─── Matching Pairs ─── */
+    const MATCHING_PAIRS = [
+      { term: "12-Column Grid", description: "The most versatile grid because 12 divides by 2, 3, 4, and 6" },
+      { term: "Gutters", description: "Spaces between columns that create breathing room" },
+      { term: "Margins", description: "Outer edges that frame and protect the content" },
+      { term: "Column Span", description: "Content stretching across multiple columns for emphasis" },
+      { term: "Breakout", description: "Intentionally extending content past grid boundaries" },
+      { term: "Responsive Grid", description: "Layout that adapts its column count to screen size" },
+    ];
+
+    /* ─── Spot the Problem ─── */
+    const SPOT_PROBLEMS = [
+      { scenario: "A website has a 12-column grid, but every piece of content — hero, articles, sidebar, footer — all span exactly 4 columns with equal width.", answer: "Grid Hierarchy", hint: "When everything is the same width, nothing stands out as more important." },
+      { scenario: "A magazine layout has text running edge-to-edge with no space between columns and no margins on the sides of the page.", answer: "Gutters & Margins", hint: "Content needs breathing room — both between columns and at the edges." },
+      { scenario: "A designer uses a different number of columns on every page of a brochure — 3 on page 1, 5 on page 2, 7 on page 3 — with no clear reason.", answer: "Consistency", hint: "Grids should be consistent across a project unless there's a deliberate reason to change." },
+    ];
+
+    /* ─── Main App ─── */
+
+    function AppContent() {
+      const c = useColors();
+      const { dark, bw } = useTheme();
+      const bwAccent = dark ? "#a0a0a0" : "#555555";
+      const tc = (topic) => bw ? bwAccent : topic.color;
+
+      const [section, setSection] = useState("learn");
+      const [activeTopic, setActiveTopic] = useState(0);
+      const [quizState, setQuizState] = useState({ current: 0, answers: [], showResult: false });
+      const [matchState, setMatchState] = useState({ selected: null, matched: [], wrong: null });
+      const [spotState, setSpotState] = useState({ current: 0, selected: null, feedback: null });
+      const [score, setScore] = useState({ quiz: 0, match: 0, spot: 0 });
+
+      const [shuffledDescriptions] = useState(() => {
+        const indices = MATCHING_PAIRS.map((_, i) => i);
+        for (let i = indices.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [indices[i], indices[j]] = [indices[j], indices[i]]; }
+        return indices;
+      });
+
+      const sections = [
+        { id: "learn", label: "Learn", icon: "book-open" },
+        { id: "quiz", label: "Quiz", icon: "pencil" },
+        { id: "match", label: "Match", icon: "link" },
+        { id: "spot", label: "Spot It", icon: "magnifying-glass" },
+        { id: "results", label: "Results", icon: "trophy" },
+      ];
+
+      const totalPossible = QUIZ_QUESTIONS.length + MATCHING_PAIRS.length + SPOT_PROBLEMS.length;
+      const totalScore = score.quiz + score.match + score.spot;
+
+      function handleQuizAnswer(i) { if (quizState.answers[quizState.current] !== undefined) return; const ok = i === QUIZ_QUESTIONS[quizState.current].correct; const a = [...quizState.answers]; a[quizState.current] = i; setQuizState({ ...quizState, answers: a }); if (ok) setScore(s => ({ ...s, quiz: s.quiz + 1 })); }
+      function nextQuiz() { quizState.current < QUIZ_QUESTIONS.length - 1 ? setQuizState({ ...quizState, current: quizState.current + 1 }) : setQuizState({ ...quizState, showResult: true }); }
+      function handleMatchSelect(i) { if (!matchState.matched.includes(i)) setMatchState({ ...matchState, selected: i, wrong: null }); }
+      function handleMatchAttempt(di) { if (matchState.selected === null) return; const ai = shuffledDescriptions[di]; if (matchState.matched.includes(ai)) return; if (matchState.selected === ai) { setMatchState({ selected: null, matched: [...matchState.matched, ai], wrong: null }); setScore(s => ({ ...s, match: s.match + 1 })); } else { setMatchState({ ...matchState, wrong: di }); setTimeout(() => setMatchState(ms => ({ ...ms, wrong: null })), 800); } }
+      function handleSpotAnswer(a) { const ok = a === SPOT_PROBLEMS[spotState.current].answer; setSpotState({ ...spotState, selected: a, feedback: ok ? "correct" : "wrong" }); if (ok) setScore(s => ({ ...s, spot: s.spot + 1 })); }
+      function nextSpot() { spotState.current < SPOT_PROBLEMS.length - 1 ? setSpotState({ current: spotState.current + 1, selected: null, feedback: null }) : setSection("results"); }
+
+      const DemoComponent = DEMO_MAP[TOPICS[activeTopic].id];
+
+      const navBtn = (s) => ({ padding: "8px 18px", borderRadius: 999, fontSize: "12pt", fontWeight: 600, border: "none", cursor: "pointer", transition: "all 0.2s", background: section === s.id ? "#4f46e5" : c.surface, color: section === s.id ? "#fff" : c.textSec, boxShadow: section === s.id ? "0 4px 14px rgba(79,70,229,0.3)" : c.cardShadow });
+      const card = { background: c.surface, borderRadius: 16, boxShadow: c.cardShadow, overflow: "hidden", transition: "all 0.3s" };
+      const optBtn = (bg, border) => ({ width: "100%", textAlign: "left", padding: 14, borderRadius: 8, border: `2px solid ${border}`, background: bg, fontSize: "12pt", cursor: "pointer", transition: "all 0.2s", color: c.text, lineHeight: 1.5 });
+      const actionBtn = { padding: "8px 18px", background: "#4f46e5", color: "#fff", border: "none", borderRadius: 8, fontSize: "12pt", fontWeight: 600, cursor: "pointer" };
+      const pillBtn = { ...actionBtn, borderRadius: 999, padding: "12px 28px" };
+
+      const spotAnswers = ["Grid Hierarchy", "Gutters & Margins", "Consistency"];
+
+      return (
+        <div style={{ minHeight: "100vh", background: c.bg }}>
+          <ThemeToggle />
+          <a href="index.html" style={{ position: "fixed", top: 16, left: 16, zIndex: 100, width: 44, height: 44, borderRadius: "50%", border: "none", background: c.surface, color: c.text, boxShadow: c.cardShadow, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16pt", textDecoration: "none", transition: "background 0.3s, color 0.3s" }} title="Back to Home"><FA icon="house" /></a>
+          <div style={{ textAlign: "center", paddingTop: 48, paddingBottom: 24, paddingLeft: 16, paddingRight: 16 }}>
+            <h1 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 800, color: c.text, letterSpacing: -0.5 }}><FA icon="grip" style={{ marginRight: 12, opacity: 0.6 }} />Understanding Grids in Design</h1>
+            <p style={{ color: c.textSec, marginTop: 8, fontSize: "12pt", maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>Master the grid system — the invisible backbone of every great layout. Learn, explore examples, then test yourself.</p>
+          </div>
+
+          {/* Nav */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, padding: "0 16px", marginBottom: 32, flexWrap: "wrap" }}>
+            {sections.map(s => <button key={s.id} onClick={() => setSection(s.id)} style={navBtn(s)}><FA icon={s.icon} style={{ marginRight: 6 }} />{s.label}</button>)}
+          </div>
+
+          <div style={{ maxWidth: section === "learn" ? 960 : 672, margin: "0 auto", padding: "0 16px 64px", transition: "max-width 0.3s" }}>
+
+            {/* ═══ LEARN ═══ */}
+            {section === "learn" && <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+              {/* Sidebar */}
+              <div style={{ width: 200, flexShrink: 0, display: "flex", flexDirection: "column", gap: 6, position: "sticky", top: 24 }}>
+                {TOPICS.map((t, i) => {
+                  const active = activeTopic === i;
+                  return (
+                    <button key={t.id} onClick={() => setActiveTopic(i)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 12, border: "none", cursor: "pointer", transition: "all 0.2s", textAlign: "left", background: active ? tc(t) : c.surface, color: active ? "#fff" : tc(t), boxShadow: active ? `0 4px 14px ${tc(t)}44` : c.cardShadow, transform: active ? "scale(1.02)" : "scale(1)" }}>
+                      <span style={{ fontSize: "16pt", width: 28, textAlign: "center", flexShrink: 0 }}><FA icon={t.icon} /></span>
+                      <span style={{ fontSize: "12pt", fontWeight: 600, lineHeight: 1.3 }}>{t.title}</span>
+                    </button>
+                  );
+                })}
+                <div style={{ marginTop: 12 }}>
+                  <button onClick={() => setSection("quiz")} style={pillBtn}>Take the Quiz <FA icon="arrow-right" style={{ marginLeft: 6 }} /></button>
+                </div>
+              </div>
+              {/* Content */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={card}>
+                  <div style={{ padding: 4, background: tc(TOPICS[activeTopic]) }} />
+                  <div style={{ padding: 24 }}>
+                    <h2 style={{ fontSize: "16pt", fontWeight: 700, color: c.text, display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: "20pt", color: tc(TOPICS[activeTopic]) }}><FA icon={TOPICS[activeTopic].icon} /></span>
+                      {TOPICS[activeTopic].title}
+                    </h2>
+                    <p style={{ color: c.textSec, marginTop: 8, fontSize: "12pt" }}>{TOPICS[activeTopic].summary}</p>
+                    <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+                      {TOPICS[activeTopic].tips.map((tip, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: "12pt", color: c.textSec }}>
+                          <span style={{ marginTop: 2, width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "10pt", fontWeight: 700, flexShrink: 0, background: tc(TOPICS[activeTopic]) }}>{i + 1}</span>
+                          {tip}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ borderTop: `1px solid ${c.border}`, background: c.surfaceAlt, padding: 24 }}>
+                    <div style={{ fontSize: "12pt", fontWeight: 600, color: c.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16, textAlign: "center" }}>Interactive Demo</div>
+                    <DemoComponent />
+                  </div>
+                </div>
+              </div>
+            </div>}
+
+            {/* ═══ QUIZ ═══ */}
+            {section === "quiz" && <div style={{ ...card, padding: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <h2 style={{ fontSize: "14pt", fontWeight: 700, color: c.text }}><FA icon="circle-question" style={{ marginRight: 8, color: "#6366f1" }} />Grid Knowledge Quiz</h2>
+                <span style={{ fontSize: "12pt", color: c.textMuted }}>{quizState.current + 1} / {QUIZ_QUESTIONS.length}</span>
+              </div>
+              <div style={{ width: "100%", height: 8, background: c.border, borderRadius: 4, marginBottom: 24 }}>
+                <div style={{ height: 8, background: "#6366f1", borderRadius: 4, transition: "width 0.5s", width: `${((quizState.current + 1) / QUIZ_QUESTIONS.length) * 100}%` }} />
+              </div>
+              {!quizState.showResult ? <div>
+                <p style={{ color: c.text, fontWeight: 600, marginBottom: 16, fontSize: "12pt" }}>{QUIZ_QUESTIONS[quizState.current].question}</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {QUIZ_QUESTIONS[quizState.current].options.map((opt, i) => {
+                    const ans = quizState.answers[quizState.current] !== undefined;
+                    const ok = i === QUIZ_QUESTIONS[quizState.current].correct;
+                    const sel = quizState.answers[quizState.current] === i;
+                    let bg = c.surface, bdr = c.border;
+                    if (ans && ok) { bg = c.greenBg; bdr = "#22c55e"; }
+                    else if (ans && sel) { bg = c.redBg; bdr = "#ef4444"; }
+                    return <button key={i} onClick={() => handleQuizAnswer(i)} style={{ ...optBtn(bg, bdr), cursor: ans ? "default" : "pointer" }}>
+                      <span style={{ fontWeight: 600 }}>{String.fromCharCode(65 + i)}.</span> {opt}
+                      {ans && ok && <span style={{ marginLeft: 8, color: "#22c55e" }}><FA icon="check" /></span>}
+                      {ans && sel && !ok && <span style={{ marginLeft: 8, color: "#ef4444" }}><FA icon="xmark" /></span>}
+                    </button>;
+                  })}
+                </div>
+                {quizState.answers[quizState.current] !== undefined && <div style={{ marginTop: 16 }}>
+                  <div style={{ fontSize: "12pt", padding: 14, borderRadius: 8, background: quizState.answers[quizState.current] === QUIZ_QUESTIONS[quizState.current].correct ? c.greenBg : c.redBg, color: quizState.answers[quizState.current] === QUIZ_QUESTIONS[quizState.current].correct ? c.greenText : c.redText }}>{QUIZ_QUESTIONS[quizState.current].explanation}</div>
+                  <button onClick={nextQuiz} style={{ ...actionBtn, marginTop: 12 }}>{quizState.current < QUIZ_QUESTIONS.length - 1 ? <span>Next Question <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span> : <span>See Results <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span>}</button>
+                </div>}
+              </div> : <div style={{ textAlign: "center", padding: "24px 0" }}>
+                <div style={{ fontSize: "40pt", marginBottom: 12, color: score.quiz >= 5 ? "#22c55e" : score.quiz >= 3 ? "#f59e0b" : "#6366f1" }}>{score.quiz >= 5 ? <FA icon="face-grin-stars" /> : score.quiz >= 3 ? <FA icon="thumbs-up" /> : <FA icon="book" />}</div>
+                <div style={{ fontSize: "20pt", fontWeight: 700, color: c.text }}>{score.quiz} / {QUIZ_QUESTIONS.length}</div>
+                <p style={{ color: c.textSec, marginTop: 8, fontSize: "12pt" }}>{score.quiz >= 5 ? "Excellent! You really understand grids." : score.quiz >= 3 ? "Good job! Review the ones you missed." : "Keep studying — grids take practice!"}</p>
+                <button onClick={() => setSection("match")} style={{ ...pillBtn, marginTop: 16 }}>Try the Matching Game <FA icon="arrow-right" style={{ marginLeft: 4 }} /></button>
+              </div>}
+            </div>}
+
+            {/* ═══ MATCH ═══ */}
+            {section === "match" && <div style={{ ...card, padding: 24 }}>
+              <h2 style={{ fontSize: "14pt", fontWeight: 700, color: c.text, marginBottom: 4 }}><FA icon="link" style={{ marginRight: 8, color: "#6366f1" }} />Grid Vocabulary Match</h2>
+              <p style={{ fontSize: "12pt", color: c.textSec, marginBottom: 20 }}>Click a term on the left, then click its matching definition on the right.</p>
+              {matchState.matched.length === MATCHING_PAIRS.length ? <div style={{ textAlign: "center", padding: "32px 0" }}>
+                <div style={{ fontSize: "40pt", marginBottom: 12, color: "#ef4444" }}><FA icon="bullseye" /></div>
+                <div style={{ fontSize: "20pt", fontWeight: 700, color: c.text }}>All Matched!</div>
+                <p style={{ color: c.textSec, marginTop: 8, fontSize: "12pt" }}>You matched {score.match} of {MATCHING_PAIRS.length} on your first try.</p>
+                <button onClick={() => setSection("spot")} style={{ ...pillBtn, marginTop: 16 }}>Try Spot the Problem <FA icon="arrow-right" style={{ marginLeft: 4 }} /></button>
+              </div> : <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {MATCHING_PAIRS.map((pair, i) => {
+                    const m = matchState.matched.includes(i), s = matchState.selected === i;
+                    return <button key={i} onClick={() => handleMatchSelect(i)} style={{ ...optBtn(m ? c.greenBg : s ? c.indigoBg : c.surface, m ? "#22c55e" : s ? "#6366f1" : c.border), opacity: m ? 0.6 : 1, fontWeight: 600 }}>
+                      {m && <span><FA icon="check" style={{ color: "#22c55e", marginRight: 6 }} /></span>}{pair.term}
+                    </button>;
+                  })}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {shuffledDescriptions.map((pi, di) => {
+                    const m = matchState.matched.includes(pi), w = matchState.wrong === di;
+                    return <button key={di} onClick={() => handleMatchAttempt(di)} style={{ ...optBtn(m ? c.greenBg : w ? c.redBg : c.surface, m ? "#22c55e" : w ? "#ef4444" : c.border), opacity: m ? 0.6 : 1 }}>
+                      {MATCHING_PAIRS[pi].description}
+                    </button>;
+                  })}
+                </div>
+              </div>}
+            </div>}
+
+            {/* ═══ SPOT IT ═══ */}
+            {section === "spot" && <div style={{ ...card, padding: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <h2 style={{ fontSize: "14pt", fontWeight: 700, color: c.text }}><FA icon="magnifying-glass" style={{ marginRight: 8, color: "#6366f1" }} />Spot the Grid Problem</h2>
+                <span style={{ fontSize: "12pt", color: c.textMuted }}>{spotState.current + 1} / {SPOT_PROBLEMS.length}</span>
+              </div>
+              <div style={{ background: c.amberBg, border: `1px solid ${c.border}`, borderRadius: 12, padding: 20, marginBottom: 20 }}>
+                <p style={{ color: c.text, fontWeight: 600, fontSize: "12pt" }}><FA icon="quote-left" style={{ color: "#f59e0b", marginRight: 8, opacity: 0.5 }} />{SPOT_PROBLEMS[spotState.current].scenario}</p>
+              </div>
+              <p style={{ fontSize: "12pt", color: c.textSec, marginBottom: 12, fontWeight: 600 }}>What grid concept is being violated?</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                {spotAnswers.map(a => {
+                  const sel = spotState.selected === a, ok = a === SPOT_PROBLEMS[spotState.current].answer, ans = spotState.feedback !== null;
+                  let bg = c.surface, bdr = c.border;
+                  if (ans && ok) { bg = c.greenBg; bdr = "#22c55e"; }
+                  else if (ans && sel && !ok) { bg = c.redBg; bdr = "#ef4444"; }
+                  return <button key={a} onClick={() => !ans && handleSpotAnswer(a)} style={{ ...optBtn(bg, bdr), fontWeight: 600, cursor: ans ? "default" : "pointer", textAlign: "center" }}>
+                    {a}
+                  </button>;
+                })}
+              </div>
+              {spotState.feedback && <div style={{ marginTop: 16 }}>
+                <div style={{ fontSize: "12pt", padding: 14, borderRadius: 8, background: spotState.feedback === "correct" ? c.greenBg : c.redBg, color: spotState.feedback === "correct" ? c.greenText : c.redText }}>
+                  {spotState.feedback === "correct" ? <span><FA icon="check-circle" style={{ marginRight: 6 }} />Correct! The answer is {SPOT_PROBLEMS[spotState.current].answer}.</span> : <span><FA icon="circle-xmark" style={{ marginRight: 6 }} />Not quite. The answer is {SPOT_PROBLEMS[spotState.current].answer}. Hint: {SPOT_PROBLEMS[spotState.current].hint}</span>}
+                </div>
+                <button onClick={nextSpot} style={{ ...actionBtn, marginTop: 12 }}>{spotState.current < SPOT_PROBLEMS.length - 1 ? <span>Next <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span> : <span>See Final Results <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span>}</button>
+              </div>}
+            </div>}
+
+            {/* ═══ RESULTS ═══ */}
+            {section === "results" && <div style={{ ...card, padding: 32, textAlign: "center" }}>
+              <div style={{ fontSize: "48pt", marginBottom: 16, color: totalScore >= totalPossible - 2 ? "#eab308" : totalScore >= totalPossible / 2 ? "#f59e0b" : "#6366f1" }}>
+                {totalScore >= totalPossible - 2 ? <FA icon="trophy" /> : totalScore >= totalPossible / 2 ? <FA icon="star" /> : <FA icon="dumbbell" />}
+              </div>
+              <h2 style={{ fontSize: "20pt", fontWeight: 700, color: c.text }}>Your Results</h2>
+              <div style={{ fontSize: "36pt", fontWeight: 800, margin: "16px 0", color: "#4f46e5" }}>{totalScore} / {totalPossible}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, margin: "24px 0" }}>
+                <div style={{ background: c.indigo50, borderRadius: 12, padding: 16 }}>
+                  <div style={{ fontSize: "12pt", color: "#818cf8", fontWeight: 600, textTransform: "uppercase" }}><FA icon="circle-question" style={{ marginRight: 4 }} />Quiz</div>
+                  <div style={{ fontSize: "20pt", fontWeight: 700, color: dark ? "#a5b4fc" : "#4338ca" }}>{score.quiz}/{QUIZ_QUESTIONS.length}</div>
+                </div>
+                <div style={{ background: c.green50, borderRadius: 12, padding: 16 }}>
+                  <div style={{ fontSize: "12pt", color: "#4ade80", fontWeight: 600, textTransform: "uppercase" }}><FA icon="link" style={{ marginRight: 4 }} />Match</div>
+                  <div style={{ fontSize: "20pt", fontWeight: 700, color: dark ? "#86efac" : "#15803d" }}>{score.match}/{MATCHING_PAIRS.length}</div>
+                </div>
+                <div style={{ background: c.amber50, borderRadius: 12, padding: 16 }}>
+                  <div style={{ fontSize: "12pt", color: "#fbbf24", fontWeight: 600, textTransform: "uppercase" }}><FA icon="magnifying-glass" style={{ marginRight: 4 }} />Spot It</div>
+                  <div style={{ fontSize: "20pt", fontWeight: 700, color: dark ? "#fcd34d" : "#92400e" }}>{score.spot}/{SPOT_PROBLEMS.length}</div>
+                </div>
+              </div>
+              <p style={{ color: c.textSec, fontSize: "12pt" }}>{totalScore >= totalPossible - 2 ? "Outstanding! You have a strong grasp of grid systems." : totalScore >= totalPossible / 2 ? "Solid work! Review the topics you missed and try again." : "Keep practicing! Head back to the Learn section to review."}</p>
+              <button onClick={() => { setSection("learn"); setQuizState({ current: 0, answers: [], showResult: false }); setMatchState({ selected: null, matched: [], wrong: null }); setSpotState({ current: 0, selected: null, feedback: null }); setScore({ quiz: 0, match: 0, spot: 0 }); }} style={{ ...pillBtn, marginTop: 20 }}>
+                <FA icon="rotate-right" style={{ marginRight: 6 }} /> Start Over
+              </button>
+            </div>}
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      return <ThemeProvider><AppContent /></ThemeProvider>;
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
