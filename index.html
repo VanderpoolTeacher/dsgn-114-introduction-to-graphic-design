@@ -177,6 +177,73 @@
     }
     .card:hover .card-link { gap: 10px; }
 
+    /* ─── View Toggle ─── */
+    .view-toggle-bar {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+    .view-btn {
+      background: var(--card-bg);
+      border: 2px solid transparent;
+      border-radius: 10px;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--text-muted);
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
+      transition: background 0.3s, color 0.3s, border-color 0.3s;
+    }
+    .view-btn:hover { color: var(--text-primary); }
+    .view-btn.active {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* ─── List View ─── */
+    .cards.list-view {
+      grid-template-columns: 1fr;
+      max-width: 700px;
+    }
+    .cards.list-view .card {
+      flex-direction: row;
+      align-items: center;
+    }
+    .cards.list-view .card-bar {
+      height: auto;
+      width: 5px;
+      align-self: stretch;
+    }
+    .cards.list-view .card-body {
+      flex-direction: row;
+      align-items: center;
+      gap: 20px;
+      padding: 18px 24px;
+    }
+    .cards.list-view .card-icon {
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+    .cards.list-view .card h2 {
+      font-size: 13pt;
+      margin-bottom: 0;
+      white-space: nowrap;
+    }
+    .cards.list-view .card p {
+      display: none;
+    }
+    .cards.list-view .card-link {
+      margin-top: 0;
+      margin-left: auto;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     /* ─── Footer ─── */
     .footer {
       text-align: center;
@@ -211,8 +278,18 @@
     <p>Interactive lessons covering design fundamentals — from core principles like contrast, alignment, and hierarchy to layout techniques like grids and responsive design.</p>
   </div>
 
+  <!-- View Toggle -->
+  <div class="view-toggle-bar">
+    <button class="view-btn active" id="gridViewBtn" aria-label="Grid view" title="Grid view">
+      <i class="fa-solid fa-grip"></i>
+    </button>
+    <button class="view-btn" id="listViewBtn" aria-label="List view" title="List view">
+      <i class="fa-solid fa-list"></i>
+    </button>
+  </div>
+
   <!-- Cards -->
-  <div class="cards">
+  <div class="cards" id="cardsContainer">
     <a href="design-principles-interactive.html" class="card">
       <div class="card-bar" style="background: linear-gradient(90deg, #6366f1, #8b5cf6)"></div>
       <div class="card-body">
@@ -309,6 +386,32 @@
       html.style.filter = bw ? 'grayscale(1)' : 'none';
       bwToggle.classList.toggle('active-bw', bw);
       try { localStorage.setItem('bw', bw ? 'true' : 'false'); } catch(e) {}
+    });
+
+    // View toggle (grid / list)
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
+    const cardsContainer = document.getElementById('cardsContainer');
+
+    let view = 'grid';
+    try { view = localStorage.getItem('view') || 'grid'; } catch(e) {}
+    if (view === 'list') {
+      cardsContainer.classList.add('list-view');
+      gridViewBtn.classList.remove('active');
+      listViewBtn.classList.add('active');
+    }
+
+    gridViewBtn.addEventListener('click', () => {
+      cardsContainer.classList.remove('list-view');
+      gridViewBtn.classList.add('active');
+      listViewBtn.classList.remove('active');
+      try { localStorage.setItem('view', 'grid'); } catch(e) {}
+    });
+    listViewBtn.addEventListener('click', () => {
+      cardsContainer.classList.add('list-view');
+      listViewBtn.classList.add('active');
+      gridViewBtn.classList.remove('active');
+      try { localStorage.setItem('view', 'list'); } catch(e) {}
     });
   </script>
 

@@ -175,18 +175,70 @@
       const c = useColors();
       const accent = "#0ea5e9";
       const [word, setWord] = useState("Typography");
+      const textRef = React.useRef(null);
+      const wrapRef = React.useRef(null);
+      const [lines, setLines] = useState(null);
+
+      React.useEffect(() => {
+        /* Measure real font metrics via Canvas TextMetrics */
+        const measure = () => {
+          const el = textRef.current;
+          const wrap = wrapRef.current;
+          if (!el || !wrap) return;
+          const style = window.getComputedStyle(el);
+          const font = style.font;
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          ctx.font = font;
+          const m = ctx.measureText(word);
+          /* actualBoundingBox values are relative to the text baseline anchor */
+          const asc = m.actualBoundingBoxAscent;   /* pixels above baseline */
+          const desc = m.actualBoundingBoxDescent;  /* pixels below baseline */
+          const fontAsc = m.fontBoundingBoxAscent;  /* full font ascender */
+          const fontDesc = m.fontBoundingBoxDescent; /* full font descender */
+          /* el's top edge in wrap coords */
+          const elRect = el.getBoundingClientRect();
+          const wrapRect = wrap.getBoundingClientRect();
+          const elTop = elRect.top - wrapRect.top;
+          /* baseline sits at elTop + fontBoundingBoxAscent (within line-height:1 box) */
+          const baseline = elTop + fontAsc;
+          /* Ascender line = top of tallest glyphs (font-level) */
+          const ascLine = baseline - fontAsc;
+          /* Cap height ≈ top of actual uppercase glyphs: measure 'H' */
+          ctx.font = font;
+          const capM = ctx.measureText("H");
+          const capLine = baseline - capM.actualBoundingBoxAscent;
+          /* X-height = top of lowercase letters without ascenders */
+          const xM = ctx.measureText("x");
+          const xLine = baseline - xM.actualBoundingBoxAscent;
+          /* Descender line = bottom of actual descenders in this word */
+          const descLine = baseline + fontDesc;
+          setLines({ ascLine, capLine, xLine, baseline, descLine });
+        };
+        /* Wait for Google Fonts to load */
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => { requestAnimationFrame(measure); });
+        } else {
+          setTimeout(measure, 300);
+        }
+      }, [word, c.text]);
+
+      const guideLine = (top, color, dashed, label) => (
+        <div className="allow-small" style={{ position: "absolute", left: 0, right: 0, top, zIndex: 1, borderTop: dashed ? `2px dashed ${color}88` : `2.5px solid ${color}bb`, fontSize: "8pt", color, paddingLeft: 4, lineHeight: 1.2, transition: "top 0.3s" }}>{label}</div>
+      );
+
       return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24, position: "relative" }}>
-            {/* Large sample word with anatomy lines */}
-            <div style={{ position: "relative", padding: "40px 0 50px", overflow: "hidden" }}>
-              {/* Guide lines */}
-              <div className="allow-small" style={{ position: "absolute", left: 0, right: 0, top: 14, borderTop: "2px dashed #ef444466", fontSize: "8pt", color: "#ef4444", paddingLeft: 4 }}>Ascender line</div>
-              <div className="allow-small" style={{ position: "absolute", left: 0, right: 0, top: 32, borderTop: "2px dashed #f59e0b66", fontSize: "8pt", color: "#f59e0b", paddingLeft: 4 }}>Cap height</div>
-              <div className="allow-small" style={{ position: "absolute", left: 0, right: 0, top: 58, borderTop: "2px dashed #10b98166", fontSize: "8pt", color: "#10b981", paddingLeft: 4 }}>X-height</div>
-              <div className="allow-small" style={{ position: "absolute", left: 0, right: 0, bottom: 34, borderTop: "2px solid #6366f1aa", fontSize: "8pt", color: "#6366f1", paddingLeft: 4 }}>Baseline</div>
-              <div className="allow-small" style={{ position: "absolute", left: 0, right: 0, bottom: 14, borderTop: "2px dashed #8b5cf666", fontSize: "8pt", color: "#8b5cf6", paddingLeft: 4 }}>Descender line</div>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "48pt", fontWeight: 700, color: c.text, textAlign: "center", position: "relative", zIndex: 2, lineHeight: 1 }}>{word}</div>
+          <div style={{ width: "100%", maxWidth: 520, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24, position: "relative" }}>
+            <div ref={wrapRef} style={{ position: "relative", padding: "28px 0 28px", minHeight: 120 }}>
+              {lines && <>
+                {guideLine(lines.ascLine, "#ef4444", true, "Ascender line")}
+                {guideLine(lines.capLine, "#f59e0b", true, "Cap height")}
+                {guideLine(lines.xLine, "#10b981", true, "X-height")}
+                {guideLine(lines.baseline, "#6366f1", false, "Baseline")}
+                {guideLine(lines.descLine, "#8b5cf6", true, "Descender line")}
+              </>}
+              <div ref={textRef} style={{ fontFamily: "'Playfair Display', serif", fontSize: "48pt", fontWeight: 700, color: c.text, textAlign: "center", position: "relative", zIndex: 2, lineHeight: 1 }}>{word}</div>
             </div>
             {/* Legend */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 }}>
