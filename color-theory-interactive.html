@@ -63,6 +63,7 @@
   <div id="root"></div>
   <script type="text/babel">
     const { useState, useEffect, createContext, useContext } = React;
+    function useIsMobile(bp = 768) { const [m, setM] = useState(window.innerWidth <= bp); useEffect(() => { const h = () => setM(window.innerWidth <= bp); window.addEventListener("resize", h); return () => window.removeEventListener("resize", h); }, [bp]); return m; }
 
     const ThemeContext = createContext();
     function useTheme() { return useContext(ThemeContext); }
@@ -550,6 +551,7 @@
     /* ─── Main App ─── */
     function AppContent() {
       const c = useColors();
+      const mobile = useIsMobile();
       const { bw } = useTheme();
       const bwAccent = bw ? "#777" : null;
       const tc = (topic) => bw ? bwAccent : topic.color;
@@ -612,12 +614,12 @@
             ))}
           </div>
 
-          <div style={{ maxWidth: section === "learn" ? 960 : 672, margin: "0 auto", padding: "0 16px 64px", transition: "max-width 0.3s" }}>
+          <div style={{ maxWidth: mobile ? "100%" : (section === "learn" ? 960 : 672), margin: "0 auto", padding: "0 16px 64px", transition: "max-width 0.3s" }}>
 
             {/* ─── LEARN ─── */}
-            {section === "learn" && <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+            {section === "learn" && <div style={{ display: "flex", flexDirection: mobile ? "column" : "row", gap: mobile ? 16 : 24, alignItems: "flex-start" }}>
               {/* Sidebar */}
-              <div style={{ width: 220, flexShrink: 0, position: "sticky", top: 80, display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ width: mobile ? "100%" : 220, flexShrink: 0, position: mobile ? "static" : "sticky", top: 80, display: "flex", flexDirection: "column", gap: 4 }}>
                 {TOPICS.map((t, i) => (
                   <button key={t.id} onClick={() => setActiveTopic(i)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, border: "none", cursor: "pointer", background: activeTopic === i ? c.surface : "transparent", boxShadow: activeTopic === i ? c.cardShadow : "none", color: activeTopic === i ? c.text : c.textSec, fontWeight: activeTopic === i ? 700 : 500, fontSize: "12pt", textAlign: "left", transition: "all 0.2s" }}>
                     <span style={{ width: 30, height: 30, borderRadius: 8, background: activeTopic === i ? tc(t) : "transparent", color: activeTopic === i ? "#fff" : c.textMuted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12pt", flexShrink: 0, transition: "all 0.2s" }}>

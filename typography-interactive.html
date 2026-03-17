@@ -67,6 +67,7 @@
   <div id="root"></div>
   <script type="text/babel">
     const { useState, useEffect, createContext, useContext } = React;
+    function useIsMobile(bp = 768) { const [m, setM] = useState(window.innerWidth <= bp); useEffect(() => { const h = () => setM(window.innerWidth <= bp); window.addEventListener("resize", h); return () => window.removeEventListener("resize", h); }, [bp]); return m; }
 
     const ThemeContext = createContext();
     function useTheme() { return useContext(ThemeContext); }
@@ -398,6 +399,7 @@
     /* ─── Main App ─── */
     function AppContent() {
       const c = useColors();
+      const mobile = useIsMobile();
       const { dark, bw } = useTheme();
       const bwAccent = dark ? "#a0a0a0" : "#555555";
       const tc = (t) => bw ? bwAccent : t.color;
@@ -454,11 +456,11 @@
             {sections.map(s => <button key={s.id} onClick={() => setSection(s.id)} style={navBtn(s)}><FA icon={s.icon} style={{ marginRight: 6 }} />{s.label}</button>)}
           </div>
 
-          <div style={{ maxWidth: section === "learn" ? 960 : 672, margin: "0 auto", padding: "0 16px 64px", transition: "max-width 0.3s" }}>
+          <div style={{ maxWidth: mobile ? "100%" : (section === "learn" ? 960 : 672), margin: "0 auto", padding: "0 16px 64px", transition: "max-width 0.3s" }}>
 
             {/* LEARN */}
-            {section === "learn" && <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
-              <div style={{ width: 200, flexShrink: 0, display: "flex", flexDirection: "column", gap: 6, position: "sticky", top: 24 }}>
+            {section === "learn" && <div style={{ display: "flex", flexDirection: mobile ? "column" : "row", gap: mobile ? 16 : 24, alignItems: "flex-start" }}>
+              <div style={{ width: mobile ? "100%" : 200, flexShrink: 0, display: "flex", flexDirection: "column", gap: 6, position: mobile ? "static" : "sticky", top: 24 }}>
                 {TOPICS.map((t, i) => {
                   const active = activeTopic === i;
                   return (<button key={t.id} onClick={() => setActiveTopic(i)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 12, border: "none", cursor: "pointer", transition: "all 0.2s", textAlign: "left", background: active ? tc(t) : c.surface, color: active ? "#fff" : tc(t), boxShadow: active ? `0 4px 14px ${tc(t)}44` : c.cardShadow, transform: active ? "scale(1.02)" : "scale(1)" }}>
