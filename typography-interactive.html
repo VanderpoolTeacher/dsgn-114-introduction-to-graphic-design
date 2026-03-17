@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Basic Typography in Design</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for demos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Merriweather:wght@400;700&family=Lora:wght@400;700&family=Roboto:wght@300;400;700&family=Open+Sans:wght@400;600;700&family=Montserrat:wght@400;600;700;800&family=Oswald:wght@400;600;700&family=Raleway:wght@400;600;700&family=Source+Code+Pro:wght@400;600&family=Space+Mono:wght@400;700&family=Dancing+Script:wght@400;700&family=Pacifico&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-1: #f8fafc; --bg-2: #eef2ff; --bg-3: #faf5ff;
+      --surface: #ffffff; --surface-alt: #f9fafb;
+      --text-primary: #1f2937; --text-secondary: #6b7280; --text-muted: #9895ad;
+      --border: #e5e7eb;
+      --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+      --accent: #4f46e5;
+      --green-bg: #dcfce7; --green-text: #15803d;
+      --red-bg: #fef2f2; --red-text: #b91c1c;
+      --amber-bg: #fffbeb;
+      --indigo-light: #eef2ff; --green-light: #f0fdf4; --amber-light: #fffbeb;
+    }
+    [data-theme="dark"] {
+      --bg-1: #0f0d1a; --bg-2: #1a1833; --bg-3: #1e1a2e;
+      --surface: #1e1b2e; --surface-alt: #262340;
+      --text-primary: #e2e0f0; --text-secondary: #a5a3b8; --text-muted: #9895ad;
+      --border: #2d2a3e;
+      --card-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15);
+      --accent: #6366f1;
+      --green-bg: #052e16; --green-text: #86efac;
+      --red-bg: #350a0a; --red-text: #fca5a5;
+      --amber-bg: #271e05;
+      --indigo-light: #1e1b3a; --green-light: #0a1f0d; --amber-light: #1f1a08;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 12pt; line-height: 1.5;
+      color: var(--text-primary);
+      transition: background 0.3s, color 0.3s;
+    }
+    * { min-font-size: 12pt; }
+    p, span, div, button, a, li, td, th, label, input, select, textarea {
+      font-size: max(12pt, inherit); line-height: 1.5;
+    }
+    .allow-small { font-size: inherit !important; }
+    .toggle-bar { position: fixed; top: 16px; right: 16px; z-index: 100; display: flex; gap: 8px; }
+    .theme-toggle-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: none;
+      background: var(--surface); color: var(--text-primary);
+      box-shadow: var(--card-shadow); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16pt; transition: background 0.3s, color 0.3s;
+    }
+    .theme-toggle-btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .theme-toggle-btn.active-bw { background: #1f2937; color: #fff; }
+    [data-theme="dark"] .theme-toggle-btn.active-bw { background: #e2e0f0; color: #1e1b2e; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, createContext, useContext } = React;
+
+    const ThemeContext = createContext();
+    function useTheme() { return useContext(ThemeContext); }
+    function ThemeProvider({ children }) {
+      const [dark, setDark] = useState(false);
+      const [bw, setBw] = useState(false);
+      useEffect(() => { try { setDark(localStorage.getItem('theme') === 'dark'); } catch(e) {} try { setBw(localStorage.getItem('bw') === 'true'); } catch(e) {} }, []);
+      useEffect(() => { document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light'); try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch(e) {} }, [dark]);
+      useEffect(() => { document.documentElement.style.filter = bw ? 'grayscale(1)' : 'none'; try { localStorage.setItem('bw', bw ? 'true' : 'false'); } catch(e) {} }, [bw]);
+      return <ThemeContext.Provider value={{ dark, toggle: () => setDark(d => !d), bw, toggleBw: () => setBw(b => !b) }}>{children}</ThemeContext.Provider>;
+    }
+    function ThemeToggle() {
+      const { dark, toggle, bw, toggleBw } = useTheme();
+      return (<div className="toggle-bar">
+        <button className={`theme-toggle-btn${bw ? ' active-bw' : ''}`} onClick={toggleBw} title="Black & white mode"><i className="fa-solid fa-droplet-slash" /></button>
+        <button className="theme-toggle-btn" onClick={toggle} title="Dark mode"><i className={`fa-solid ${dark ? 'fa-sun' : 'fa-moon'}`} /></button>
+      </div>);
+    }
+    function FA({ icon, className = "", style = {} }) { return <i className={`fa-solid fa-${icon} ${className}`} style={style} />; }
+
+    function useColors() {
+      const { dark } = useTheme();
+      return {
+        bg: dark ? "linear-gradient(135deg, #0f0d1a 0%, #1a1833 50%, #1e1a2e 100%)" : "linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #faf5ff 100%)",
+        surface: dark ? "#1e1b2e" : "#ffffff", surfaceAlt: dark ? "#262340" : "#f9fafb",
+        text: dark ? "#e2e0f0" : "#1f2937", textSec: dark ? "#a5a3b8" : "#6b7280", textMuted: dark ? "#9895ad" : "#9ca3af",
+        border: dark ? "#2d2a3e" : "#e5e7eb",
+        greenBg: dark ? "#052e16" : "#dcfce7", greenText: dark ? "#86efac" : "#15803d",
+        redBg: dark ? "#350a0a" : "#fef2f2", redText: dark ? "#fca5a5" : "#b91c1c",
+        amberBg: dark ? "#271e05" : "#fffbeb",
+        indigoBg: dark ? "#1e1b3a" : "#eef2ff",
+        indigo50: dark ? "#1e1b3a" : "#eef2ff", green50: dark ? "#0a1f0d" : "#f0fdf4", amber50: dark ? "#1f1a08" : "#fffbeb",
+        cardShadow: dark ? "0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15)" : "0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04)",
+      };
+    }
+
+    /* ─── Topics ─── */
+    const TOPICS = [
+      { id: "typefaces", title: "Typeface Categories", color: "#6366f1", icon: "font",
+        summary: "Typefaces fall into major categories — Serif, Sans-Serif, Monospace, Display, and Script. Each has a distinct personality and best-use context.",
+        tips: ["Serif fonts (Times, Merriweather) have small strokes at letter ends — they feel classic and trustworthy", "Sans-serif fonts (Roboto, Open Sans) are clean and modern — dominant in web/UI design", "Display and script fonts are for headlines and accents only — never for body text"]
+      },
+      { id: "anatomy", title: "Type Anatomy", color: "#0ea5e9", icon: "microscope",
+        summary: "Typography has its own vocabulary: baseline, x-height, ascender, descender, cap height, and more. Understanding anatomy helps you make better font choices.",
+        tips: ["The baseline is the invisible line letters sit on", "X-height is the height of lowercase letters — taller x-height = more readable at small sizes", "Ascenders (b, d, h) go above x-height; descenders (g, p, y) drop below the baseline"]
+      },
+      { id: "headings", title: "Headings & Body", color: "#10b981", icon: "heading",
+        summary: "A clear heading-to-body hierarchy uses size, weight, and sometimes font changes to guide the reader. Headings attract attention; body text sustains reading.",
+        tips: ["Heading sizes should follow a clear scale (e.g., H1: 36pt, H2: 28pt, H3: 22pt, Body: 16pt)", "Body text should be 16–18px for screens, with 1.5–1.75 line height for readability", "Use weight contrast — bold headings with regular-weight body text"]
+      },
+      { id: "pairing", title: "Font Pairing", color: "#f59e0b", icon: "object-group",
+        summary: "Great designs use 2–3 fonts that complement each other. The key is contrast with harmony — pair fonts that are different enough to create interest but share underlying proportions.",
+        tips: ["Classic pairing: Serif heading + Sans-serif body (e.g., Playfair Display + Roboto)", "Safe pairing: same family, different weights (e.g., Montserrat Bold + Montserrat Regular)", "Avoid pairing fonts that are too similar — it looks like a mistake, not a choice"]
+      },
+      { id: "spacing", title: "Spacing & Readability", color: "#ef4444", icon: "text-width",
+        summary: "Letter-spacing (tracking), word spacing, and line-height (leading) control how comfortable text is to read. Small adjustments make a big difference.",
+        tips: ["Increase line-height to 1.5–1.75 for body text — tight leading is hard to read", "Add letter-spacing to uppercase text and small caps for legibility", "Paragraph width should be 45–75 characters per line for optimal readability"]
+      },
+      { id: "hierarchy", title: "Typographic Hierarchy", color: "#8b5cf6", icon: "layer-group",
+        summary: "Typographic hierarchy uses size, weight, color, spacing, and font choice to create levels of importance. A well-structured hierarchy guides the eye through content.",
+        tips: ["Aim for at least 3 distinct levels: primary (headline), secondary (subhead), and tertiary (body)", "Size ratio between levels should be noticeable — at least 1.25x between each step", "Color and weight can reinforce hierarchy without changing font size"]
+      },
+    ];
+
+    /* ─── Demo Components ─── */
+
+    function TypefacesDemo() {
+      const [cat, setCat] = useState("serif");
+      const c = useColors();
+      const accent = "#6366f1";
+      const categories = {
+        serif: { label: "Serif", fonts: ["'Playfair Display'", "'Merriweather'", "'Lora'"], desc: "Classic, trustworthy, editorial. Small strokes (serifs) at the ends of letters guide the eye along lines of text.", use: "Books, newspapers, luxury branding, long-form print" },
+        sans: { label: "Sans-Serif", fonts: ["'Roboto'", "'Open Sans'", "'Montserrat'"], desc: "Clean, modern, approachable. No serifs — ideal for screens and minimalist design.", use: "Websites, apps, UI design, tech branding" },
+        mono: { label: "Monospace", fonts: ["'Source Code Pro'", "'Space Mono'", "'Courier New'"], desc: "Every character takes the same horizontal space. Technical, structured, retro feel.", use: "Code editors, data tables, technical docs" },
+        display: { label: "Display", fonts: ["'Oswald'", "'Raleway'", "'Montserrat'"], desc: "Designed for large sizes — bold, expressive, attention-grabbing. Not suitable for body text.", use: "Headlines, posters, logos, hero sections" },
+        script: { label: "Script", fonts: ["'Dancing Script'", "'Pacifico'", "cursive"], desc: "Mimics handwriting or calligraphy. Elegant or casual depending on the style.", use: "Invitations, logos, accent text — never for body" },
+      };
+      const cat_ = categories[cat];
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap", justifyContent: "center" }}>
+            {Object.entries(categories).map(([k, v]) => (
+              <button key={k} onClick={() => setCat(k)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: cat === k ? accent : c.border, color: cat === k ? "#fff" : c.textSec, transition: "all 0.3s" }}>{v.label}</button>
+            ))}
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {cat_.fonts.map((font, i) => (
+                <div key={i} style={{ padding: 16, borderRadius: 10, background: c.surfaceAlt, border: `1px solid ${c.border}` }}>
+                  <div style={{ fontFamily: font, fontSize: "24pt", fontWeight: 700, color: c.text, lineHeight: 1.3, marginBottom: 4 }}>The quick brown fox</div>
+                  <div style={{ fontFamily: font, fontSize: "14pt", color: c.textSec, lineHeight: 1.5, marginBottom: 8 }}>jumps over the lazy dog. 0123456789</div>
+                  <div className="allow-small" style={{ fontSize: "9pt", color: accent, fontWeight: 600, fontFamily: "system-ui" }}>{font.replace(/'/g, "")}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: `${accent}10`, border: `1px solid ${accent}22` }}>
+              <div style={{ fontSize: "12pt", color: c.text, fontWeight: 600, marginBottom: 4 }}>{cat_.desc}</div>
+              <div style={{ fontSize: "12pt", color: c.textSec }}><FA icon="bullseye" style={{ marginRight: 6, color: accent }} />Best for: {cat_.use}</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function AnatomyDemo() {
+      const c = useColors();
+      const accent = "#0ea5e9";
+      const [word, setWord] = useState("Typography");
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24, position: "relative" }}>
+            {/* Large sample word with anatomy lines */}
+            <div style={{ position: "relative", padding: "40px 0 50px", overflow: "hidden" }}>
+              {/* Guide lines */}
+              <div className="allow-small" style={{ position: "absolute", left: 0, right: 0, top: 14, borderTop: "2px dashed #ef444466", fontSize: "8pt", color: "#ef4444", paddingLeft: 4 }}>Ascender line</div>
+              <div className="allow-small" style={{ position: "absolute", left: 0, right: 0, top: 32, borderTop: "2px dashed #f59e0b66", fontSize: "8pt", color: "#f59e0b", paddingLeft: 4 }}>Cap height</div>
+              <div className="allow-small" style={{ position: "absolute", left: 0, right: 0, top: 58, borderTop: "2px dashed #10b98166", fontSize: "8pt", color: "#10b981", paddingLeft: 4 }}>X-height</div>
+              <div className="allow-small" style={{ position: "absolute", left: 0, right: 0, bottom: 34, borderTop: "2px solid #6366f1aa", fontSize: "8pt", color: "#6366f1", paddingLeft: 4 }}>Baseline</div>
+              <div className="allow-small" style={{ position: "absolute", left: 0, right: 0, bottom: 14, borderTop: "2px dashed #8b5cf666", fontSize: "8pt", color: "#8b5cf6", paddingLeft: 4 }}>Descender line</div>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "48pt", fontWeight: 700, color: c.text, textAlign: "center", position: "relative", zIndex: 2, lineHeight: 1 }}>{word}</div>
+            </div>
+            {/* Legend */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 }}>
+              {[
+                { label: "Ascender", desc: "Parts above x-height (b, d, h)", color: "#ef4444" },
+                { label: "Cap Height", desc: "Top of uppercase letters", color: "#f59e0b" },
+                { label: "X-Height", desc: "Height of lowercase x", color: "#10b981" },
+                { label: "Baseline", desc: "Line letters sit on", color: "#6366f1" },
+                { label: "Descender", desc: "Parts below baseline (g, p, y)", color: "#8b5cf6" },
+                { label: "Counter", desc: "Enclosed space in letters (o, e)", color: accent },
+              ].map((item, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "12pt" }}>
+                  <div style={{ width: 12, height: 12, borderRadius: 3, background: item.color, flexShrink: 0 }} />
+                  <div><span style={{ fontWeight: 600, color: c.text }}>{item.label}</span> <span style={{ color: c.textSec }}>— {item.desc}</span></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+            {["Typography", "Handgloves", "Rhythm"].map(w => (
+              <button key={w} onClick={() => setWord(w)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: word === w ? accent : c.border, color: word === w ? "#fff" : c.textSec, transition: "all 0.3s" }}>{w}</button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function HeadingsDemo() {
+      const [scale, setScale] = useState("good");
+      const c = useColors();
+      const accent = "#10b981";
+      const scales = {
+        flat: { label: "Flat (Bad)", h1: 16, h2: 15, h3: 14, body: 14, weight: [500, 500, 400, 400], lh: 1.3 },
+        good: { label: "Clear Scale", h1: 36, h2: 26, h3: 20, body: 16, weight: [800, 700, 600, 400], lh: 1.6 },
+        dramatic: { label: "Dramatic", h1: 48, h2: 28, h3: 18, body: 15, weight: [900, 700, 600, 400], lh: 1.5 },
+      };
+      const s = scales[scale];
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            {Object.entries(scales).map(([k, v]) => (
+              <button key={k} onClick={() => setScale(k)} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: scale === k ? (k === "flat" ? "#ef4444" : accent) : c.border, color: scale === k ? "#fff" : c.textSec, transition: "all 0.3s" }}>{v.label}</button>
+            ))}
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24 }}>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: s.h1, fontWeight: s.weight[0], color: c.text, lineHeight: 1.15, marginBottom: 8, transition: "all 0.4s" }}>
+              Heading One
+              <span className="allow-small" style={{ fontSize: "9pt", color: accent, fontWeight: 400, marginLeft: 8 }}>{s.h1}pt / {s.weight[0]}</span>
+            </div>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: s.h2, fontWeight: s.weight[1], color: c.text, lineHeight: 1.2, marginBottom: 6, transition: "all 0.4s" }}>
+              Heading Two
+              <span className="allow-small" style={{ fontSize: "9pt", color: accent, fontWeight: 400, marginLeft: 8 }}>{s.h2}pt / {s.weight[1]}</span>
+            </div>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: s.h3, fontWeight: s.weight[2], color: c.text, lineHeight: 1.3, marginBottom: 8, transition: "all 0.4s" }}>
+              Heading Three
+              <span className="allow-small" style={{ fontSize: "9pt", color: accent, fontWeight: 400, marginLeft: 8 }}>{s.h3}pt / {s.weight[2]}</span>
+            </div>
+            <div style={{ fontFamily: "'Open Sans', sans-serif", fontSize: s.body, fontWeight: s.weight[3], color: c.textSec, lineHeight: s.lh, transition: "all 0.4s" }}>
+              Body text should be comfortable to read for extended periods. Good typography creates a smooth reading rhythm where the eye flows naturally from line to line without fatigue.
+              <span className="allow-small" style={{ fontSize: "9pt", color: accent, fontWeight: 600, marginLeft: 4 }}>{s.body}pt / {s.weight[3]} / {s.lh} lh</span>
+            </div>
+          </div>
+          <p style={{ fontSize: "12pt", color: c.textMuted, fontStyle: "italic", textAlign: "center", maxWidth: 400 }}>
+            {scale === "flat" ? "All text is nearly the same size and weight — there's no hierarchy. The eye doesn't know where to start." :
+             scale === "good" ? "Clear size and weight progression: H1 (36pt bold) through body (16pt regular). The eye flows naturally." :
+             "Dramatic contrast: the H1 commands attention at 48pt. Great for editorial and landing pages."}
+          </p>
+        </div>
+      );
+    }
+
+    function PairingDemo() {
+      const [pair, setPair] = useState(0);
+      const c = useColors();
+      const accent = "#f59e0b";
+      const pairings = [
+        { heading: "'Playfair Display', serif", body: "'Roboto', sans-serif", hName: "Playfair Display", bName: "Roboto", why: "Classic serif + clean sans-serif. Strong contrast creates elegance — perfect for editorial and luxury." },
+        { heading: "'Montserrat', sans-serif", body: "'Open Sans', sans-serif", hName: "Montserrat", bName: "Open Sans", why: "Geometric heading + humanist body. Both modern, but different enough to create clear hierarchy." },
+        { heading: "'Oswald', sans-serif", body: "'Merriweather', serif", hName: "Oswald", bName: "Merriweather", why: "Condensed bold heading + readable serif body. Great for news sites and blogs." },
+        { heading: "'Raleway', sans-serif", body: "'Lora', serif", hName: "Raleway", bName: "Lora", why: "Elegant thin sans + warm serif. Sophisticated and inviting — great for creative portfolios." },
+        { heading: "'Dancing Script', cursive", body: "'Roboto', sans-serif", hName: "Dancing Script", bName: "Roboto", why: "Script accent + clean sans body. Use script sparingly — only for headlines or short phrases." },
+      ];
+      const p = pairings[pair];
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap", justifyContent: "center" }}>
+            {pairings.map((pr, i) => (
+              <button key={i} onClick={() => setPair(i)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: pair === i ? accent : c.border, color: pair === i ? "#fff" : c.textSec, transition: "all 0.3s" }}>{pr.hName} + {pr.bName}</button>
+            ))}
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, overflow: "hidden" }}>
+            {/* Preview card */}
+            <div style={{ padding: 28 }}>
+              <div style={{ fontFamily: p.heading, fontSize: "32pt", fontWeight: 700, color: c.text, lineHeight: 1.2, marginBottom: 4 }}>The Art of Design</div>
+              <div style={{ fontFamily: p.heading, fontSize: "16pt", fontWeight: 400, color: c.textSec, lineHeight: 1.4, marginBottom: 16 }}>Exploring beauty through intentional choices</div>
+              <div style={{ fontFamily: p.body, fontSize: "13pt", color: c.textSec, lineHeight: 1.7 }}>Great design isn't about decoration — it's about communication. Every typeface, every spacing decision, and every color choice should serve the message. When typography is done well, readers don't notice the fonts. They simply absorb the content.</div>
+            </div>
+            <div style={{ padding: "14px 28px", background: c.surfaceAlt, borderTop: `1px solid ${c.border}`, display: "flex", gap: 24 }}>
+              <div style={{ fontSize: "12pt" }}><span style={{ fontWeight: 600, color: accent }}>Heading:</span> <span style={{ color: c.textSec }}>{p.hName}</span></div>
+              <div style={{ fontSize: "12pt" }}><span style={{ fontWeight: 600, color: accent }}>Body:</span> <span style={{ color: c.textSec }}>{p.bName}</span></div>
+            </div>
+          </div>
+          <p style={{ fontSize: "12pt", color: c.textMuted, fontStyle: "italic", textAlign: "center", maxWidth: 420 }}>{p.why}</p>
+        </div>
+      );
+    }
+
+    function SpacingDemo() {
+      const [mode, setMode] = useState("good");
+      const c = useColors();
+      const accent = "#ef4444";
+      const modes = {
+        tight: { tracking: -0.5, lineHeight: 1.1, wordSpacing: -1, width: "100%", label: "Too Tight" },
+        good: { tracking: 0, lineHeight: 1.65, wordSpacing: 0, width: "80%", label: "Optimal" },
+        loose: { tracking: 2, lineHeight: 2.4, wordSpacing: 4, width: "60%", label: "Too Loose" },
+      };
+      const m = modes[mode];
+      const sample = "Good typography is invisible. When spacing is right, the reader flows through text effortlessly. Every decision about tracking, leading, and measure shapes the reading experience.";
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            {Object.entries(modes).map(([k, v]) => (
+              <button key={k} onClick={() => setMode(k)} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: mode === k ? (k === "good" ? "#22c55e" : accent) : c.border, color: mode === k ? "#fff" : c.textSec, transition: "all 0.3s" }}>{v.label}</button>
+            ))}
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 24 }}>
+            <div style={{ width: m.width, margin: "0 auto", transition: "all 0.5s" }}>
+              <div style={{ fontFamily: "'Open Sans', sans-serif", fontSize: "14pt", fontWeight: 700, color: c.text, letterSpacing: m.tracking, lineHeight: 1.2, marginBottom: 12, transition: "all 0.5s" }}>THE IMPORTANCE OF SPACING</div>
+              <div style={{ fontFamily: "'Open Sans', sans-serif", fontSize: "13pt", color: c.textSec, letterSpacing: m.tracking * 0.3, lineHeight: m.lineHeight, wordSpacing: m.wordSpacing, transition: "all 0.5s" }}>{sample}</div>
+            </div>
+            <div style={{ display: "flex", gap: 12, marginTop: 16, justifyContent: "center", flexWrap: "wrap" }}>
+              <div className="allow-small" style={{ fontSize: "10pt", padding: "4px 10px", borderRadius: 6, background: c.surfaceAlt, color: c.textSec }}>Tracking: {m.tracking > 0 ? "+" : ""}{m.tracking}px</div>
+              <div className="allow-small" style={{ fontSize: "10pt", padding: "4px 10px", borderRadius: 6, background: c.surfaceAlt, color: c.textSec }}>Line-height: {m.lineHeight}</div>
+              <div className="allow-small" style={{ fontSize: "10pt", padding: "4px 10px", borderRadius: 6, background: c.surfaceAlt, color: c.textSec }}>Measure: {m.width}</div>
+            </div>
+          </div>
+          <p style={{ fontSize: "12pt", color: c.textMuted, fontStyle: "italic", textAlign: "center", maxWidth: 400 }}>
+            {mode === "tight" ? "Too tight: letters and lines collide. Readers lose their place and fatigue quickly." :
+             mode === "good" ? "Optimal: comfortable tracking, 1.65 line-height, ~65 characters per line. Effortless reading." :
+             "Too loose: large gaps between letters and lines break the visual rhythm. Text feels disconnected."}
+          </p>
+        </div>
+      );
+    }
+
+    function HierarchyDemo() {
+      const [mode, setMode] = useState("good");
+      const c = useColors();
+      const accent = "#8b5cf6";
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <button onClick={() => setMode("flat")} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: mode === "flat" ? "#ef4444" : c.border, color: mode === "flat" ? "#fff" : c.textSec, transition: "all 0.3s" }}>No Hierarchy</button>
+            <button onClick={() => setMode("good")} style={{ padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontWeight: 600, fontSize: "12pt", background: mode === "good" ? "#22c55e" : c.border, color: mode === "good" ? "#fff" : c.textSec, transition: "all 0.3s" }}>Strong Hierarchy</button>
+          </div>
+          <div style={{ width: "100%", maxWidth: 480, background: c.surface, borderRadius: 12, boxShadow: c.cardShadow, padding: 28 }}>
+            {mode === "flat" ? (
+              <div style={{ fontFamily: "'Roboto', sans-serif" }}>
+                <div style={{ fontSize: "14pt", fontWeight: 400, color: c.textSec, marginBottom: 4 }}>SUMMER DESIGN CONFERENCE 2026</div>
+                <div style={{ fontSize: "14pt", fontWeight: 400, color: c.textSec, marginBottom: 4 }}>Join leading designers for three days of workshops, talks, and networking</div>
+                <div style={{ fontSize: "14pt", fontWeight: 400, color: c.textSec, marginBottom: 4 }}>June 15–17, Portland Convention Center</div>
+                <div style={{ fontSize: "14pt", fontWeight: 400, color: c.textSec, marginBottom: 4 }}>Keynote: The Future of Responsive Typography</div>
+                <div style={{ fontSize: "14pt", fontWeight: 400, color: c.textSec }}>Register now at designconf.com</div>
+              </div>
+            ) : (
+              <div>
+                <div className="allow-small" style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "10pt", fontWeight: 700, color: accent, letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>Summer 2026</div>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "30pt", fontWeight: 900, color: c.text, lineHeight: 1.15, marginBottom: 8 }}>Design Conference</div>
+                <div style={{ fontFamily: "'Open Sans', sans-serif", fontSize: "14pt", fontWeight: 400, color: c.textSec, lineHeight: 1.6, marginBottom: 16 }}>Join leading designers for three days of workshops, talks, and networking at the Portland Convention Center.</div>
+                <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "12pt", fontWeight: 600, color: c.text, marginBottom: 4 }}><FA icon="calendar" style={{ marginRight: 6, color: accent }} />June 15–17, 2026</div>
+                <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: "12pt", fontWeight: 600, color: c.text, marginBottom: 12 }}><FA icon="microphone" style={{ marginRight: 6, color: accent }} />Keynote: The Future of Responsive Typography</div>
+                <div style={{ display: "inline-block", padding: "10px 24px", borderRadius: 8, background: accent, color: "#fff", fontFamily: "'Montserrat', sans-serif", fontSize: "12pt", fontWeight: 700 }}>Register Now</div>
+              </div>
+            )}
+          </div>
+          <p style={{ fontSize: "12pt", color: c.textMuted, fontStyle: "italic", textAlign: "center", maxWidth: 400 }}>
+            {mode === "flat" ? "Everything is the same font, size, weight, and color. The reader can't tell what's important or where to start." :
+             "Clear hierarchy: overline label, large serif title, medium sans body, bold details, and a CTA button. Each level has a distinct role."}
+          </p>
+        </div>
+      );
+    }
+
+    const DEMO_MAP = { typefaces: TypefacesDemo, anatomy: AnatomyDemo, headings: HeadingsDemo, pairing: PairingDemo, spacing: SpacingDemo, hierarchy: HierarchyDemo };
+
+    /* ─── Quiz ─── */
+    const QUIZ_QUESTIONS = [
+      { question: "Which typeface category features small strokes at the ends of letters and is considered classic and trustworthy?", options: ["Sans-Serif", "Monospace", "Serif", "Script"], correct: 2, explanation: "Serif fonts have small decorative strokes (serifs) at the ends of letters. They feel traditional and are common in print and editorial design." },
+      { question: "What is 'x-height' in typography?", options: ["The height of the letter X in points", "The height of lowercase letters like x, a, e", "The maximum font size allowed", "The distance between two lines of text"], correct: 1, explanation: "X-height is the height of lowercase letters (measured by the letter x). A taller x-height generally means better readability at small sizes." },
+      { question: "What's the recommended line-height (leading) for body text on screens?", options: ["1.0 (single-spaced)", "1.2", "1.5 to 1.75", "3.0"], correct: 2, explanation: "1.5–1.75 line-height gives body text enough breathing room to be comfortable for extended reading on screens." },
+      { question: "Which font pairing approach creates the most effective contrast?", options: ["Two very similar sans-serif fonts", "A serif heading with a sans-serif body", "Using the same font for everything", "Two different script fonts"], correct: 1, explanation: "Pairing a serif heading with a sans-serif body creates strong contrast while maintaining harmony. The fonts are different enough to create visual interest." },
+      { question: "What is the ideal character count per line (measure) for readable body text?", options: ["20–30 characters", "45–75 characters", "100–120 characters", "It doesn't matter"], correct: 1, explanation: "45–75 characters per line is the optimal measure for readability. Too narrow and the eye bounces too often; too wide and readers lose their place." },
+      { question: "How many distinct levels should a good typographic hierarchy have at minimum?", options: ["1", "2", "3", "6"], correct: 2, explanation: "At minimum, you need 3 levels: primary (headline), secondary (subhead), and tertiary (body). More complex layouts may need additional levels." },
+      { question: "When should you use a display or script font for body text?", options: ["When the text is important", "When the design is formal", "Never — they're only for headlines and accents", "When the paragraph is short"], correct: 2, explanation: "Display and script fonts are designed for large sizes and short text. They become illegible and tiring when used for extended body text." },
+    ];
+
+    /* ─── Matching ─── */
+    const MATCHING_PAIRS = [
+      { term: "Serif", description: "Typeface with small strokes at the ends of letters" },
+      { term: "Sans-Serif", description: "Clean typeface without decorative letter strokes" },
+      { term: "Leading", description: "The vertical space between lines of text" },
+      { term: "Tracking", description: "Uniform letter-spacing across a word or block" },
+      { term: "X-Height", description: "Height of lowercase letters like a, e, x" },
+      { term: "Measure", description: "The width of a text block in characters per line" },
+    ];
+
+    /* ─── Spot Problems ─── */
+    const SPOT_PROBLEMS = [
+      { scenario: "A website uses Pacifico (a script font) as the body text for a 500-word article. It looks decorative but readers complain it's hard to read.", answer: "Typeface Choice", hint: "Script and display fonts aren't designed for extended reading." },
+      { scenario: "A poster has a headline, subtitle, date, location, and call-to-action — all set in the same font, same size, same weight, same color.", answer: "Typographic Hierarchy", hint: "When everything looks the same, nothing stands out." },
+      { scenario: "A blog post has body text with a line-height of 1.0 and lines that are 120 characters wide. Readers report losing their place.", answer: "Spacing & Readability", hint: "Think about leading and measure — are they within comfortable ranges?" },
+    ];
+
+    /* ─── Main App ─── */
+    function AppContent() {
+      const c = useColors();
+      const { dark, bw } = useTheme();
+      const bwAccent = dark ? "#a0a0a0" : "#555555";
+      const tc = (t) => bw ? bwAccent : t.color;
+
+      const [section, setSection] = useState("learn");
+      const [activeTopic, setActiveTopic] = useState(0);
+      const [quizState, setQuizState] = useState({ current: 0, answers: [], showResult: false });
+      const [matchState, setMatchState] = useState({ selected: null, matched: [], wrong: null });
+      const [spotState, setSpotState] = useState({ current: 0, selected: null, feedback: null });
+      const [score, setScore] = useState({ quiz: 0, match: 0, spot: 0 });
+
+      const [shuffledDesc] = useState(() => {
+        const idx = MATCHING_PAIRS.map((_, i) => i);
+        for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+        return idx;
+      });
+
+      const sections = [
+        { id: "learn", label: "Learn", icon: "book-open" },
+        { id: "quiz", label: "Quiz", icon: "pencil" },
+        { id: "match", label: "Match", icon: "link" },
+        { id: "spot", label: "Spot It", icon: "magnifying-glass" },
+        { id: "results", label: "Results", icon: "trophy" },
+      ];
+
+      const totalPossible = QUIZ_QUESTIONS.length + MATCHING_PAIRS.length + SPOT_PROBLEMS.length;
+      const totalScore = score.quiz + score.match + score.spot;
+
+      function handleQuizAnswer(i) { if (quizState.answers[quizState.current] !== undefined) return; const ok = i === QUIZ_QUESTIONS[quizState.current].correct; const a = [...quizState.answers]; a[quizState.current] = i; setQuizState({ ...quizState, answers: a }); if (ok) setScore(s => ({ ...s, quiz: s.quiz + 1 })); }
+      function nextQuiz() { quizState.current < QUIZ_QUESTIONS.length - 1 ? setQuizState({ ...quizState, current: quizState.current + 1 }) : setQuizState({ ...quizState, showResult: true }); }
+      function handleMatchSelect(i) { if (!matchState.matched.includes(i)) setMatchState({ ...matchState, selected: i, wrong: null }); }
+      function handleMatchAttempt(di) { if (matchState.selected === null) return; const ai = shuffledDesc[di]; if (matchState.matched.includes(ai)) return; if (matchState.selected === ai) { setMatchState({ selected: null, matched: [...matchState.matched, ai], wrong: null }); setScore(s => ({ ...s, match: s.match + 1 })); } else { setMatchState({ ...matchState, wrong: di }); setTimeout(() => setMatchState(ms => ({ ...ms, wrong: null })), 800); } }
+      function handleSpotAnswer(a) { const ok = a === SPOT_PROBLEMS[spotState.current].answer; setSpotState({ ...spotState, selected: a, feedback: ok ? "correct" : "wrong" }); if (ok) setScore(s => ({ ...s, spot: s.spot + 1 })); }
+      function nextSpot() { spotState.current < SPOT_PROBLEMS.length - 1 ? setSpotState({ current: spotState.current + 1, selected: null, feedback: null }) : setSection("results"); }
+
+      const DemoComponent = DEMO_MAP[TOPICS[activeTopic].id];
+      const navBtn = (s) => ({ padding: "8px 18px", borderRadius: 999, fontSize: "12pt", fontWeight: 600, border: "none", cursor: "pointer", transition: "all 0.2s", background: section === s.id ? "#4f46e5" : c.surface, color: section === s.id ? "#fff" : c.textSec, boxShadow: section === s.id ? "0 4px 14px rgba(79,70,229,0.3)" : c.cardShadow });
+      const card = { background: c.surface, borderRadius: 16, boxShadow: c.cardShadow, overflow: "hidden", transition: "all 0.3s" };
+      const optBtn = (bg, border) => ({ width: "100%", textAlign: "left", padding: 14, borderRadius: 8, border: `2px solid ${border}`, background: bg, fontSize: "12pt", cursor: "pointer", transition: "all 0.2s", color: c.text, lineHeight: 1.5 });
+      const actionBtn = { padding: "8px 18px", background: "#4f46e5", color: "#fff", border: "none", borderRadius: 8, fontSize: "12pt", fontWeight: 600, cursor: "pointer" };
+      const pillBtn = { ...actionBtn, borderRadius: 999, padding: "12px 28px" };
+      const spotAnswers = ["Typeface Choice", "Typographic Hierarchy", "Spacing & Readability"];
+
+      return (
+        <div style={{ minHeight: "100vh", background: c.bg }}>
+          <ThemeToggle />
+          <a href="index.html" style={{ position: "fixed", top: 16, left: 16, zIndex: 100, width: 44, height: 44, borderRadius: "50%", border: "none", background: c.surface, color: c.text, boxShadow: c.cardShadow, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16pt", textDecoration: "none", transition: "background 0.3s, color 0.3s" }} title="Back to Home"><FA icon="house" /></a>
+          <div style={{ textAlign: "center", paddingTop: 48, paddingBottom: 24, paddingLeft: 16, paddingRight: 16 }}>
+            <h1 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 800, color: c.text, letterSpacing: -0.5 }}><FA icon="font" style={{ marginRight: 12, opacity: 0.6 }} />Basic Typography</h1>
+            <p style={{ color: c.textSec, marginTop: 8, fontSize: "12pt", maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>Explore typeface categories, font pairing, heading scales, spacing, and typographic hierarchy — then test your knowledge.</p>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, padding: "0 16px", marginBottom: 32, flexWrap: "wrap" }}>
+            {sections.map(s => <button key={s.id} onClick={() => setSection(s.id)} style={navBtn(s)}><FA icon={s.icon} style={{ marginRight: 6 }} />{s.label}</button>)}
+          </div>
+
+          <div style={{ maxWidth: section === "learn" ? 960 : 672, margin: "0 auto", padding: "0 16px 64px", transition: "max-width 0.3s" }}>
+
+            {/* LEARN */}
+            {section === "learn" && <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+              <div style={{ width: 200, flexShrink: 0, display: "flex", flexDirection: "column", gap: 6, position: "sticky", top: 24 }}>
+                {TOPICS.map((t, i) => {
+                  const active = activeTopic === i;
+                  return (<button key={t.id} onClick={() => setActiveTopic(i)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 12, border: "none", cursor: "pointer", transition: "all 0.2s", textAlign: "left", background: active ? tc(t) : c.surface, color: active ? "#fff" : tc(t), boxShadow: active ? `0 4px 14px ${tc(t)}44` : c.cardShadow, transform: active ? "scale(1.02)" : "scale(1)" }}>
+                    <span style={{ fontSize: "16pt", width: 28, textAlign: "center", flexShrink: 0 }}><FA icon={t.icon} /></span>
+                    <span style={{ fontSize: "12pt", fontWeight: 600, lineHeight: 1.3 }}>{t.title}</span>
+                  </button>);
+                })}
+                <div style={{ marginTop: 12 }}><button onClick={() => setSection("quiz")} style={pillBtn}>Take the Quiz <FA icon="arrow-right" style={{ marginLeft: 6 }} /></button></div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={card}>
+                  <div style={{ padding: 4, background: tc(TOPICS[activeTopic]) }} />
+                  <div style={{ padding: 24 }}>
+                    <h2 style={{ fontSize: "16pt", fontWeight: 700, color: c.text, display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: "20pt", color: tc(TOPICS[activeTopic]) }}><FA icon={TOPICS[activeTopic].icon} /></span>
+                      {TOPICS[activeTopic].title}
+                    </h2>
+                    <p style={{ color: c.textSec, marginTop: 8, fontSize: "12pt" }}>{TOPICS[activeTopic].summary}</p>
+                    <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+                      {TOPICS[activeTopic].tips.map((tip, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: "12pt", color: c.textSec }}>
+                          <span style={{ marginTop: 2, width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "10pt", fontWeight: 700, flexShrink: 0, background: tc(TOPICS[activeTopic]) }}>{i + 1}</span>
+                          {tip}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ borderTop: `1px solid ${c.border}`, background: c.surfaceAlt, padding: 24 }}>
+                    <div style={{ fontSize: "12pt", fontWeight: 600, color: c.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16, textAlign: "center" }}>Interactive Demo</div>
+                    <DemoComponent />
+                  </div>
+                </div>
+              </div>
+            </div>}
+
+            {/* QUIZ */}
+            {section === "quiz" && <div style={{ ...card, padding: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <h2 style={{ fontSize: "14pt", fontWeight: 700, color: c.text }}><FA icon="circle-question" style={{ marginRight: 8, color: "#6366f1" }} />Typography Quiz</h2>
+                <span style={{ fontSize: "12pt", color: c.textMuted }}>{quizState.current + 1} / {QUIZ_QUESTIONS.length}</span>
+              </div>
+              <div style={{ width: "100%", height: 8, background: c.border, borderRadius: 4, marginBottom: 24 }}>
+                <div style={{ height: 8, background: "#6366f1", borderRadius: 4, transition: "width 0.5s", width: `${((quizState.current + 1) / QUIZ_QUESTIONS.length) * 100}%` }} />
+              </div>
+              {!quizState.showResult ? <div>
+                <p style={{ color: c.text, fontWeight: 600, marginBottom: 16, fontSize: "12pt" }}>{QUIZ_QUESTIONS[quizState.current].question}</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {QUIZ_QUESTIONS[quizState.current].options.map((opt, i) => {
+                    const ans = quizState.answers[quizState.current] !== undefined;
+                    const ok = i === QUIZ_QUESTIONS[quizState.current].correct;
+                    const sel = quizState.answers[quizState.current] === i;
+                    let bg = c.surface, bdr = c.border;
+                    if (ans && ok) { bg = c.greenBg; bdr = "#22c55e"; } else if (ans && sel) { bg = c.redBg; bdr = "#ef4444"; }
+                    return <button key={i} onClick={() => handleQuizAnswer(i)} style={{ ...optBtn(bg, bdr), cursor: ans ? "default" : "pointer" }}>
+                      <span style={{ fontWeight: 600 }}>{String.fromCharCode(65 + i)}.</span> {opt}
+                      {ans && ok && <span style={{ marginLeft: 8, color: "#22c55e" }}><FA icon="check" /></span>}
+                      {ans && sel && !ok && <span style={{ marginLeft: 8, color: "#ef4444" }}><FA icon="xmark" /></span>}
+                    </button>;
+                  })}
+                </div>
+                {quizState.answers[quizState.current] !== undefined && <div style={{ marginTop: 16 }}>
+                  <div style={{ fontSize: "12pt", padding: 14, borderRadius: 8, background: quizState.answers[quizState.current] === QUIZ_QUESTIONS[quizState.current].correct ? c.greenBg : c.redBg, color: quizState.answers[quizState.current] === QUIZ_QUESTIONS[quizState.current].correct ? c.greenText : c.redText }}>{QUIZ_QUESTIONS[quizState.current].explanation}</div>
+                  <button onClick={nextQuiz} style={{ ...actionBtn, marginTop: 12 }}>{quizState.current < QUIZ_QUESTIONS.length - 1 ? <span>Next Question <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span> : <span>See Results <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span>}</button>
+                </div>}
+              </div> : <div style={{ textAlign: "center", padding: "24px 0" }}>
+                <div style={{ fontSize: "40pt", marginBottom: 12, color: score.quiz >= 6 ? "#22c55e" : score.quiz >= 4 ? "#f59e0b" : "#6366f1" }}>{score.quiz >= 6 ? <FA icon="face-grin-stars" /> : score.quiz >= 4 ? <FA icon="thumbs-up" /> : <FA icon="book" />}</div>
+                <div style={{ fontSize: "20pt", fontWeight: 700, color: c.text }}>{score.quiz} / {QUIZ_QUESTIONS.length}</div>
+                <p style={{ color: c.textSec, marginTop: 8, fontSize: "12pt" }}>{score.quiz >= 6 ? "Excellent! You know your type." : score.quiz >= 4 ? "Good job! Review the ones you missed." : "Keep studying — typography takes practice!"}</p>
+                <button onClick={() => setSection("match")} style={{ ...pillBtn, marginTop: 16 }}>Try the Matching Game <FA icon="arrow-right" style={{ marginLeft: 4 }} /></button>
+              </div>}
+            </div>}
+
+            {/* MATCH */}
+            {section === "match" && <div style={{ ...card, padding: 24 }}>
+              <h2 style={{ fontSize: "14pt", fontWeight: 700, color: c.text, marginBottom: 4 }}><FA icon="link" style={{ marginRight: 8, color: "#6366f1" }} />Typography Vocabulary Match</h2>
+              <p style={{ fontSize: "12pt", color: c.textSec, marginBottom: 20 }}>Click a term on the left, then click its matching definition on the right.</p>
+              {matchState.matched.length === MATCHING_PAIRS.length ? <div style={{ textAlign: "center", padding: "32px 0" }}>
+                <div style={{ fontSize: "40pt", marginBottom: 12, color: "#ef4444" }}><FA icon="bullseye" /></div>
+                <div style={{ fontSize: "20pt", fontWeight: 700, color: c.text }}>All Matched!</div>
+                <p style={{ color: c.textSec, marginTop: 8, fontSize: "12pt" }}>You matched {score.match} of {MATCHING_PAIRS.length} on your first try.</p>
+                <button onClick={() => setSection("spot")} style={{ ...pillBtn, marginTop: 16 }}>Try Spot the Problem <FA icon="arrow-right" style={{ marginLeft: 4 }} /></button>
+              </div> : <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {MATCHING_PAIRS.map((pair, i) => {
+                    const m = matchState.matched.includes(i), s = matchState.selected === i;
+                    return <button key={i} onClick={() => handleMatchSelect(i)} style={{ ...optBtn(m ? c.greenBg : s ? c.indigoBg : c.surface, m ? "#22c55e" : s ? "#6366f1" : c.border), opacity: m ? 0.6 : 1, fontWeight: 600 }}>
+                      {m && <span><FA icon="check" style={{ color: "#22c55e", marginRight: 6 }} /></span>}{pair.term}
+                    </button>;
+                  })}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {shuffledDesc.map((pi, di) => {
+                    const m = matchState.matched.includes(pi), w = matchState.wrong === di;
+                    return <button key={di} onClick={() => handleMatchAttempt(di)} style={{ ...optBtn(m ? c.greenBg : w ? c.redBg : c.surface, m ? "#22c55e" : w ? "#ef4444" : c.border), opacity: m ? 0.6 : 1 }}>
+                      {MATCHING_PAIRS[pi].description}
+                    </button>;
+                  })}
+                </div>
+              </div>}
+            </div>}
+
+            {/* SPOT IT */}
+            {section === "spot" && <div style={{ ...card, padding: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <h2 style={{ fontSize: "14pt", fontWeight: 700, color: c.text }}><FA icon="magnifying-glass" style={{ marginRight: 8, color: "#6366f1" }} />Spot the Typography Problem</h2>
+                <span style={{ fontSize: "12pt", color: c.textMuted }}>{spotState.current + 1} / {SPOT_PROBLEMS.length}</span>
+              </div>
+              <div style={{ background: c.amberBg, border: `1px solid ${c.border}`, borderRadius: 12, padding: 20, marginBottom: 20 }}>
+                <p style={{ color: c.text, fontWeight: 600, fontSize: "12pt" }}><FA icon="quote-left" style={{ color: "#f59e0b", marginRight: 8, opacity: 0.5 }} />{SPOT_PROBLEMS[spotState.current].scenario}</p>
+              </div>
+              <p style={{ fontSize: "12pt", color: c.textSec, marginBottom: 12, fontWeight: 600 }}>What typography concept is being violated?</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                {spotAnswers.map(a => {
+                  const sel = spotState.selected === a, ok = a === SPOT_PROBLEMS[spotState.current].answer, ans = spotState.feedback !== null;
+                  let bg = c.surface, bdr = c.border;
+                  if (ans && ok) { bg = c.greenBg; bdr = "#22c55e"; } else if (ans && sel && !ok) { bg = c.redBg; bdr = "#ef4444"; }
+                  return <button key={a} onClick={() => !ans && handleSpotAnswer(a)} style={{ ...optBtn(bg, bdr), fontWeight: 600, cursor: ans ? "default" : "pointer", textAlign: "center" }}>{a}</button>;
+                })}
+              </div>
+              {spotState.feedback && <div style={{ marginTop: 16 }}>
+                <div style={{ fontSize: "12pt", padding: 14, borderRadius: 8, background: spotState.feedback === "correct" ? c.greenBg : c.redBg, color: spotState.feedback === "correct" ? c.greenText : c.redText }}>
+                  {spotState.feedback === "correct" ? <span><FA icon="check-circle" style={{ marginRight: 6 }} />Correct! The answer is {SPOT_PROBLEMS[spotState.current].answer}.</span> : <span><FA icon="circle-xmark" style={{ marginRight: 6 }} />Not quite. The answer is {SPOT_PROBLEMS[spotState.current].answer}. Hint: {SPOT_PROBLEMS[spotState.current].hint}</span>}
+                </div>
+                <button onClick={nextSpot} style={{ ...actionBtn, marginTop: 12 }}>{spotState.current < SPOT_PROBLEMS.length - 1 ? <span>Next <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span> : <span>See Final Results <FA icon="arrow-right" style={{ marginLeft: 4 }} /></span>}</button>
+              </div>}
+            </div>}
+
+            {/* RESULTS */}
+            {section === "results" && <div style={{ ...card, padding: 32, textAlign: "center" }}>
+              <div style={{ fontSize: "48pt", marginBottom: 16, color: totalScore >= totalPossible - 2 ? "#eab308" : totalScore >= totalPossible / 2 ? "#f59e0b" : "#6366f1" }}>
+                {totalScore >= totalPossible - 2 ? <FA icon="trophy" /> : totalScore >= totalPossible / 2 ? <FA icon="star" /> : <FA icon="dumbbell" />}
+              </div>
+              <h2 style={{ fontSize: "20pt", fontWeight: 700, color: c.text }}>Your Results</h2>
+              <div style={{ fontSize: "36pt", fontWeight: 800, margin: "16px 0", color: "#4f46e5" }}>{totalScore} / {totalPossible}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, margin: "24px 0" }}>
+                <div style={{ background: c.indigo50, borderRadius: 12, padding: 16 }}>
+                  <div style={{ fontSize: "12pt", color: "#818cf8", fontWeight: 600, textTransform: "uppercase" }}><FA icon="circle-question" style={{ marginRight: 4 }} />Quiz</div>
+                  <div style={{ fontSize: "20pt", fontWeight: 700, color: dark ? "#a5b4fc" : "#4338ca" }}>{score.quiz}/{QUIZ_QUESTIONS.length}</div>
+                </div>
+                <div style={{ background: c.green50, borderRadius: 12, padding: 16 }}>
+                  <div style={{ fontSize: "12pt", color: "#4ade80", fontWeight: 600, textTransform: "uppercase" }}><FA icon="link" style={{ marginRight: 4 }} />Match</div>
+                  <div style={{ fontSize: "20pt", fontWeight: 700, color: dark ? "#86efac" : "#15803d" }}>{score.match}/{MATCHING_PAIRS.length}</div>
+                </div>
+                <div style={{ background: c.amber50, borderRadius: 12, padding: 16 }}>
+                  <div style={{ fontSize: "12pt", color: "#fbbf24", fontWeight: 600, textTransform: "uppercase" }}><FA icon="magnifying-glass" style={{ marginRight: 4 }} />Spot It</div>
+                  <div style={{ fontSize: "20pt", fontWeight: 700, color: dark ? "#fcd34d" : "#92400e" }}>{score.spot}/{SPOT_PROBLEMS.length}</div>
+                </div>
+              </div>
+              <p style={{ color: c.textSec, fontSize: "12pt" }}>{totalScore >= totalPossible - 2 ? "Outstanding! You have a strong grasp of typography." : totalScore >= totalPossible / 2 ? "Solid work! Review the topics you missed and try again." : "Keep practicing! Head back to the Learn section to review."}</p>
+              <button onClick={() => { setSection("learn"); setQuizState({ current: 0, answers: [], showResult: false }); setMatchState({ selected: null, matched: [], wrong: null }); setSpotState({ current: 0, selected: null, feedback: null }); setScore({ quiz: 0, match: 0, spot: 0 }); }} style={{ ...pillBtn, marginTop: 20 }}>
+                <FA icon="rotate-right" style={{ marginRight: 6 }} /> Start Over
+              </button>
+            </div>}
+          </div>
+        </div>
+      );
+    }
+
+    function App() { return <ThemeProvider><AppContent /></ThemeProvider>; }
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
