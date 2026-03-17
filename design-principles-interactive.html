@@ -57,8 +57,11 @@
     /* Allow specific UI elements to be smaller for design purposes */
     .allow-small { font-size: inherit !important; }
 
-    .theme-toggle-btn {
+    .toggle-bar {
       position: fixed; top: 16px; right: 16px; z-index: 100;
+      display: flex; gap: 8px;
+    }
+    .theme-toggle-btn {
       width: 44px; height: 44px; border-radius: 50%; border: none;
       background: var(--surface); color: var(--text-primary);
       box-shadow: var(--card-shadow); cursor: pointer;
@@ -66,6 +69,8 @@
       font-size: 16pt; transition: background 0.3s, color 0.3s;
     }
     .theme-toggle-btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .theme-toggle-btn.active-bw { background: #1f2937; color: #fff; }
+    [data-theme="dark"] .theme-toggle-btn.active-bw { background: #e2e0f0; color: #1e1b2e; }
   </style>
 </head>
 <body>
@@ -79,22 +84,33 @@
 
     function ThemeProvider({ children }) {
       const [dark, setDark] = useState(false);
+      const [bw, setBw] = useState(false);
       useEffect(() => {
         try { setDark(localStorage.getItem('theme') === 'dark'); } catch(e) {}
+        try { setBw(localStorage.getItem('bw') === 'true'); } catch(e) {}
       }, []);
       useEffect(() => {
         document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
         try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch(e) {}
       }, [dark]);
-      return <ThemeContext.Provider value={{ dark, toggle: () => setDark(d => !d) }}>{children}</ThemeContext.Provider>;
+      useEffect(() => {
+        document.documentElement.style.filter = bw ? 'grayscale(1)' : 'none';
+        try { localStorage.setItem('bw', bw ? 'true' : 'false'); } catch(e) {}
+      }, [bw]);
+      return <ThemeContext.Provider value={{ dark, toggle: () => setDark(d => !d), bw, toggleBw: () => setBw(b => !b) }}>{children}</ThemeContext.Provider>;
     }
 
     function ThemeToggle() {
-      const { dark, toggle } = useTheme();
+      const { dark, toggle, bw, toggleBw } = useTheme();
       return (
-        <button className="theme-toggle-btn" onClick={toggle} aria-label="Toggle dark mode">
-          <i className={`fa-solid ${dark ? 'fa-sun' : 'fa-moon'}`} />
-        </button>
+        <div className="toggle-bar">
+          <button className={`theme-toggle-btn${bw ? ' active-bw' : ''}`} onClick={toggleBw} aria-label="Toggle black and white mode" title="Black & white mode">
+            <i className="fa-solid fa-droplet-slash" />
+          </button>
+          <button className="theme-toggle-btn" onClick={toggle} aria-label="Toggle dark mode" title="Dark mode">
+            <i className={`fa-solid ${dark ? 'fa-sun' : 'fa-moon'}`} />
+          </button>
+        </div>
       );
     }
 
